@@ -1,0 +1,39 @@
+{
+  "type": "module",
+  "name": "medplum-demo-bots",
+  "version": "1.0.0",
+  "description": "Medplum Demo Bots",
+  "scripts": {
+    "build": "tsc",
+    "deploy:hello-world": "medplum deploy-bot dist/hello-world.js e54fa800-02ab-41be-8d48-8c027dd85f0c"
+  },
+  "author": "Medplum <hello@medplum.com>",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@medplum/cli": "^0.9.2",
+    "@medplum/core": "^0.9.2",
+    "@medplum/fhirtypes": "^0.9.2",
+    "@types/node": "^17.0.31",
+    "eslint": "8.14.0",
+    "eslint-config-prettier": "8.5.0",
+    "eslint-plugin-prettier": "4.0.0",
+    "node-fetch": "^3.2.4",
+    "prettier": "2.6.2",
+    "typescript": "^4.6.4"
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:prettier/recommended"
+    ]
+  },
+  "prettier": {
+    "printWidth": 120,
+    "singleQuote": true
+  }
+}
