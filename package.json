@@ -10,9 +10,9 @@
   "author": "Medplum <hello@medplum.com>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@medplum/cli": "^0.9.2",
-    "@medplum/core": "^0.9.2",
-    "@medplum/fhirtypes": "^0.9.2",
+    "@medplum/cli": "^0.9.4",
+    "@medplum/core": "^0.9.4",
+    "@medplum/fhirtypes": "^0.9.4",
     "@types/node": "^17.0.31",
     "eslint": "8.14.0",
     "eslint-config-prettier": "8.5.0",
