@@ -1,20 +1,21 @@
-import { createReference, getQuestionnaireAnswers, MedplumClient } from '@medplum/core';
+import { BotEvent, createReference, getQuestionnaireAnswers, MedplumClient } from '@medplum/core';
 import { Communication, Patient, QuestionnaireResponse, ServiceRequest } from '@medplum/fhirtypes';
 
-export async function handler(medplum: MedplumClient, input: QuestionnaireResponse): Promise<any> {
+export async function handler(medplum: MedplumClient, event: BotEvent): Promise<any> {
   // Get all of the answers from the questionnaire response
-  const answers = getQuestionnaireAnswers(input);
+  const answers = getQuestionnaireAnswers(event.input as QuestionnaireResponse);
 
   // Some quick data validation
   const firstName = answers['firstName']?.valueString;
   if (!firstName) {
     console.log('Missing first name');
-    return;
+    return false;
   }
 
   const lastName = answers['lastName']?.valueString;
   if (!lastName) {
     console.log('Missing last name');
+    return false;
   }
 
   // Create a patient (FHIR Patient)
@@ -50,4 +51,6 @@ export async function handler(medplum: MedplumClient, input: QuestionnaireRespon
       ],
     });
   }
+
+  return true;
 }

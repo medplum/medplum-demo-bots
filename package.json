@@ -5,21 +5,26 @@
   "description": "Medplum Demo Bots",
   "scripts": {
     "build": "tsc",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "deploy:hello-world": "medplum deploy-bot dist/hello-world.js e54fa800-02ab-41be-8d48-8c027dd85f0c"
   },
   "author": "Medplum <hello@medplum.com>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@medplum/cli": "^0.9.4",
-    "@medplum/core": "^0.9.4",
-    "@medplum/fhirtypes": "^0.9.4",
-    "@types/node": "^17.0.31",
-    "eslint": "8.14.0",
+    "@medplum/cli": "0.9.5",
+    "@medplum/core": "0.9.5",
+    "@medplum/fhirtypes": "0.9.5",
+    "@medplum/mock": "0.9.5",
+    "@types/node": "17.0.33",
+    "c8": "7.11.2",
+    "eslint": "8.15.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-prettier": "4.0.0",
-    "node-fetch": "^3.2.4",
+    "node-fetch": "3.2.4",
     "prettier": "2.6.2",
-    "typescript": "^4.6.4"
+    "typescript": "4.6.4",
+    "vitest": "0.12.6"
   },
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",

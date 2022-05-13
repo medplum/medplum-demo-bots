@@ -1,7 +1,7 @@
-import { MedplumClient } from '@medplum/core';
-import { Resource } from '@medplum/fhirtypes';
+import { BotEvent, MedplumClient } from '@medplum/core';
 
-export async function handler(medplum: MedplumClient, input: Resource): Promise<any> {
+export async function handler(medplum: MedplumClient, event: BotEvent): Promise<any> {
   console.log('Hello world');
-  console.log(JSON.stringify(input, undefined, 2));
+  console.log(JSON.stringify(event, undefined, 2));
+  return true;
 }
