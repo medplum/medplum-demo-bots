@@ -4,8 +4,6 @@ This repo contains code for [Medplum Bots](https://docs.medplum.com/app/bots). B
 
 Bots make heavy use of the [Medplum JS Client Library](https://docs.medplum.com/typedoc/core/index.html).
 
-Change bot ID in here: https://github.com/medplum/medplum-demo-bots/blob/main/package.json
-
 ## Setup
 
 To set up your bot deployment you will need to do the following:
@@ -49,3 +47,13 @@ Deploy one bot:
 ```bash
 npm run deploy:hello-world
 ```
+
+## Publishing your Bot
+
+Before your bot runs in production you will need to publish it. Publishing only works from the Medplum app.
+
+* Navigate to the [Bots page](https://app.medplum.com/Bot/)
+* Go to the `Editor` tab
+* Click on the `Publish` button
+
+After a few seconds your bot will be published and run in production.
