@@ -2,6 +2,7 @@ import { BotEvent, createReference, MedplumClient } from '@medplum/core';
 import {
   Coverage,
   CoverageEligibilityRequest,
+  CoverageEligibilityResponse,
   Organization,
   Patient,
   Practitioner,
@@ -10,14 +11,15 @@ import {
 import fetch from 'node-fetch';
 
 export async function handler(medplum: MedplumClient, event: BotEvent): Promise<any> {
-  // Because this bot is triggered by a subscription, the resource that comes in is a CoverageEligilityRequest object
-  const coverageEligibilityReq = event.input as CoverageEligibilityRequest;
-  const patient = await medplum.readReference(coverageEligibilityReq.patient as Reference<Patient>);
-  const organization = await medplum.readReference(coverageEligibilityReq.insurer as Reference<Organization>);
-  const provider = await medplum.readReference(coverageEligibilityReq.provider as Reference<Practitioner>);
-  const coverage = await medplum.readReference(coverageEligibilityReq?.insurance?.[0] as Reference<Coverage>);
+  // Because this bot is triggered by a subscription, the resource that comes in is a Coverage object
+  const coverage = event.input as Coverage;
+  const patient = await medplum.readReference(coverage.subscriber as Reference<Patient>);
+  const organization: Organization = await medplum.readReference(coverage.payor?.[0] as Reference<Organization>);
+  const provider: Practitioner = await medplum.readReference(
+    patient.generalPractitioner?.[0] as Reference<Practitioner>
+  );
 
-  if (!coverageEligibilityReq) {
+  if (!coverage) {
     console.log('No coverage found');
     return true;
   }
@@ -36,6 +38,14 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     console.log('No provider found');
     return true;
   }
+
+  var coverageEligibilityReq: CoverageEligibilityRequest = await medplum.createResource({
+    resourceType: 'CoverageEligibilityRequest',
+    provider: createReference(provider),
+    patient: createReference(patient),
+    insurer: createReference(organization),
+    insurance: [createReference(coverage)],
+  });
 
   const providerNpi = provider.identifier?.find(
     (identifier) => identifier.system === 'http://hl7.org/fhir/sid/us-npi'
@@ -59,7 +69,6 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     },
     services: serviceTypes,
   };
-  console.log(JSON.stringify(opkitRequest, null, 2));
 
   const result: any = await fetch('https://api.opkit.co/v1/eligibility_inquiries', {
     method: 'POST',
@@ -254,12 +263,12 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     return item;
   };
 
-  const updatedCoverageEligibilityReq = await medplum.updateResource({
-    id: coverageEligibilityReq.id,
+  coverageEligibilityReq = await medplum.updateResource({
     resourceType: 'CoverageEligibilityRequest',
+    id: coverageEligibilityReq.id,
     identifier: [
       {
-        system: 'https://api.opkit.co/v1/eligibility_inquiries/{id}',
+        system: 'https://api.opkit.co/v1/eligibility_inquiries/',
         value: result.id,
       },
     ],
@@ -273,12 +282,12 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     ],
   });
 
-  const coverageEligibilityResponse = await medplum.createResource({
+  const coverageEligibilityResponse: CoverageEligibilityResponse = await medplum.createResource({
     resourceType: 'CoverageEligibilityResponse',
     status: isPlanActive ? 'active' : 'inactive',
     outcome: 'complete',
     purpose: ['validation', 'benefits'],
-    request: createReference(updatedCoverageEligibilityReq),
+    request: createReference(coverageEligibilityReq),
     disposition: isPlanActive ? 'Policy is currently in-force.' : 'Policy is currently not in-force.',
     patient: createReference(patient),
     insurer: createReference(organization),
@@ -291,12 +300,16 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     ],
   });
 
-  console.log(
-    JSON.stringify({
-      coverageEligibilityResponse,
-      updatedCoverageEligibilityReq,
-    })
-  );
+  if (!isPlanActive) {
+    await medplum.sendEmail({
+      to: 'alice@example.com',
+      cc: 'bob@example.com',
+      subject: 'Eligibility Check Failed ' + coverageEligibilityResponse.id,
+      text:
+        'Hello Alice, Insurance Eligibility has failed for a patient.  See details: https://app.medplum.com/CoverageEligibilityResponse' +
+        coverageEligibilityResponse.id,
+    });
+  }
 
   return true;
 }

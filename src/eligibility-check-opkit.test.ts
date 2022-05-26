@@ -1,5 +1,5 @@
 import { createReference } from '@medplum/core';
-import { Coverage, CoverageEligibilityRequest, Organization, Patient, Practitioner } from '@medplum/fhirtypes';
+import { Coverage, Organization, Patient, Practitioner } from '@medplum/fhirtypes';
 import { MockClient } from '@medplum/mock';
 import { expect, test } from 'vitest';
 import { handler } from './eligibility-check-opkit';
@@ -10,31 +10,7 @@ const contentType = 'application/fhir+json';
 test('Success', async () => {
   const medplum = new MockClient();
 
-  const patient = await medplum.createResource<Patient>({
-    resourceType: 'Patient',
-    name: [{ given: ['Michael'], family: 'Scott' }],
-    birthDate: '01-01-2000',
-    gender: 'male',
-    telecom: [
-      {
-        system: 'email',
-        value: 'michael@example.com',
-      },
-    ],
-  });
-
-  const org = await medplum.createResource<Organization>({
-    resourceType: 'Organization',
-    name: 'THE OFFICE INSURANCE COMPANY',
-    identifier: [
-      {
-        system: 'https://docs.opkit.co/reference/getpayers',
-        value: 'dcc25e45-9110-4f39-9a56-2306b5430bd0',
-      },
-    ],
-  });
-
-  const practioner = await medplum.createResource<Practitioner>({
+  const practitioner = await medplum.createResource<Practitioner>({
     resourceType: 'Practitioner',
     name: [
       {
@@ -58,21 +34,38 @@ test('Success', async () => {
     ],
   });
 
-  const coverage = await medplum.createResource<Coverage>({
+  const patient = await medplum.createResource<Patient>({
+    resourceType: 'Patient',
+    name: [{ given: ['Michael'], family: 'Scott' }],
+    birthDate: '01-01-2000',
+    gender: 'male',
+    telecom: [
+      {
+        system: 'email',
+        value: 'michael@example.com',
+      },
+    ],
+    generalPractitioner: [createReference(practitioner)],
+  });
+
+  const org = await medplum.createResource<Organization>({
+    resourceType: 'Organization',
+    name: 'THE OFFICE INSURANCE COMPANY',
+    identifier: [
+      {
+        system: 'https://docs.opkit.co/reference/getpayers',
+        value: 'dcc25e45-9110-4f39-9a56-2306b5430bd0',
+      },
+    ],
+  });
+
+  const input: Coverage = {
     resourceType: 'Coverage',
+    id: '52e9f3e8-0b9d-47ca-b1af-1f9750c0e7c6',
     subscriber: createReference(patient),
     payor: [createReference(org)],
     subscriberId: '123',
     status: 'active',
-  });
-
-  const input: CoverageEligibilityRequest = {
-    id: '83230953-5283-48e6-ae7f-57363a142d8a',
-    resourceType: 'CoverageEligibilityRequest',
-    provider: createReference(practioner),
-    patient: createReference(patient),
-    insurer: createReference(org),
-    insurance: [createReference(coverage)],
   };
 
   const result = await handler(medplum, { input, contentType });
