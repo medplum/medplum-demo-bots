@@ -1,0 +1,22 @@
+{
+  "bots": [
+    {
+      "name": "hello-world",
+      "id": "488fe72d-b5cf-4a8a-81df-908647c19e02",
+      "source": "src/hello-world.ts",
+      "dist": "dist/hello-world.js"
+    },
+    {
+      "name": "patient-intake",
+      "id": "add1bd8d-0901-46a3-87ec-222ef88abccd",
+      "source": "src/patient-intake.ts",
+      "dist": "dist/patient-intake.js"
+    },
+    {
+      "name": "create-pdf",
+      "id": "daae7b6b-3481-4a60-a4b1-31f8fbff4468",
+      "source": "src/create-pdf.ts",
+      "dist": "dist/create-pdf.js"
+    }
+  ]
+}

@@ -2,8 +2,8 @@
   "compilerOptions": {
     "outDir": "dist",
     "lib": ["esnext"],
-    "target": "es2020",
-    "module": "es2020",
+    "target": "es2018",
+    "module": "commonjs",
     "moduleResolution": "node",
     "strict": true,
     "sourceMap": true,
