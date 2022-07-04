@@ -6,8 +6,13 @@ import { handler } from './eligibility-check-opkit';
 
 const contentType = 'application/fhir+json';
 
-// To run this test only: npm t -- src/eligibility-check-opkit.test.ts
-test('Success', async () => {
+/*
+This test will not work without a valid OpKit API Key.
+Add your API key to the top of `eligibility-check-opkit.ts` and
+then enable this test.
+*/
+
+test.skip('Success', async () => {
   const medplum = new MockClient();
 
   const practitioner = await medplum.createResource<Practitioner>({
