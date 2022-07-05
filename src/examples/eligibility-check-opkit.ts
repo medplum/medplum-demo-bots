@@ -10,6 +10,8 @@ import {
 } from '@medplum/fhirtypes';
 import fetch from 'node-fetch';
 
+const OPKIT_KEY = '<opkit-public-api-key>';
+
 export async function handler(medplum: MedplumClient, event: BotEvent): Promise<any> {
   // Because this bot is triggered by a subscription, the resource that comes in is a Coverage object
   const coverage = event.input as Coverage;
@@ -51,7 +53,6 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     (identifier) => identifier.system === 'http://hl7.org/fhir/sid/us-npi'
   )?.value;
   const serviceTypes = ['health_benefit_plan_coverage'];
-  const opkitKey = '<opkit-public-api-key>';
   const payerId = organization.identifier?.find(
     (identifier) => identifier.system === 'https://docs.opkit.co/reference/getpayers'
   )?.value;
@@ -74,7 +75,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     method: 'POST',
     body: JSON.stringify(opkitRequest),
     headers: {
-      Authorization: 'Basic ' + Buffer.from(`${opkitKey}:`).toString('base64'),
+      Authorization: 'Basic ' + Buffer.from(`${OPKIT_KEY}:`).toString('base64'),
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
