@@ -4,16 +4,6 @@ import { AccessPolicy, DiagnosticReport, Observation, Patient, Practitioner, Sch
 export async function handler(medplum: MedplumClient, event: BotEvent): Promise<any> {
   const patient = event.input as Patient;
 
-  //Create access policy for patient
-  const patientAccessPolicy = await medplum.createResource<AccessPolicy>({
-    resourceType: 'AccessPolicy',
-    name: 'Example Access Policy',
-    compartment: {
-      reference: createReference(patient).reference,
-      display: getDisplayString(patient) + ' Access Policy',
-    },
-  });
-
   //Create a practitioner if if isn't already created
   const practitioner = await medplum.createResourceIfNoneExist<Practitioner>(
     {
@@ -72,69 +62,41 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     slotDate.setDate(slotDate.getDate() + 1);
   }
 
-  //Create observations for DiagnosticReport
-  const observation1 = await medplum.createResource<Observation>({
-    resourceType: 'Observation',
-    subject: {
-      reference: createReference(patient).reference,
-      display: getDisplayString(patient),
-    },
-    code: {
-      text: 'Hemoglobin A1c',
-    },
-    valueQuantity: {
-      value: 5.4,
-      unit: 'mmol/L',
-    },
-    referenceRange: [
-      {
-        high: {
-          value: 7.0,
-        },
+  //Create observations for DiagnosticReport if not exits
+  const observation1 = await medplum.createResourceIfNoneExist<Observation>(
+    {
+      resourceType: 'Observation',
+      subject: {
+        reference: createReference(patient).reference,
+        display: getDisplayString(patient),
       },
-    ],
-  });
+      code: {
+        text: 'Hemoglobin A1c',
+      },
+      valueQuantity: {
+        value: 5.4,
+        unit: 'mmol/L',
+      },
+      referenceRange: [
+        {
+          high: {
+            value: 7.0,
+          },
+        },
+      ],
+    },
+    'Observation/patient-' + patient.id + '-observation-1'
+  );
 
-  //Create observations for DiagnosticReport
-  const observation2 = await medplum.createResource<Observation>({
-    resourceType: 'Observation',
-    subject: {
-      reference: createReference(patient).reference,
-      display: getDisplayString(patient),
-    },
-    code: {
-      text: 'LDL',
-    },
-    valueQuantity: {
-      value: 99,
-      unit: 'mg/dL',
-    },
-    referenceRange: [
-      {
-        high: {
-          value: 100,
-        },
-      },
-    ],
-  });
-  //Create a diagnostic report for the patient
-  const diagnosticReport = await medplum.createResource<DiagnosticReport>({
-    resourceType: 'DiagnosticReport',
-    subject: {
-      reference: createReference(patient).reference,
-      display: getDisplayString(patient),
-    },
-    resultsInterpreter: [
-      {
-        reference: createReference(practitioner).reference,
-        display: getDisplayString(practitioner),
-      },
-    ],
-    result: [
-      { reference: createReference(observation1).reference },
-      { reference: createReference(observation2).reference },
-    ],
-  });
+  //All of these resources are created in the same transaction if they don't exist
+
+  //Add CarePlan - create 2, 1 active and one completed
+  //Add Task and assign to patient
+  //Add DiagnosticReport with Observations (Lab Result)
+  //Add Medications
+  //Add Immunizations
+  //Add Vitals - Blood Pressure, height, weight, respiratory rate, temperature, etc.
+  //Make a default message "Hello and welcome to our practice"
 
   return true;
 }
