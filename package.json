@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
+    "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "prettier": "prettier --write .",
     "deploy:hello-world": "medplum deploy-bot dist/hello-world.js e54fa800-02ab-41be-8d48-8c027dd85f0c"
@@ -25,7 +26,8 @@
     "node-fetch": "3.2.4",
     "prettier": "2.6.2",
     "typescript": "4.6.4",
-    "vitest": "0.12.6"
+    "vitest": "0.12.6",
+    "@vitest/ui": "0.17.0"
   },
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",
