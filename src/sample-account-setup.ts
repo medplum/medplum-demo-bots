@@ -98,11 +98,12 @@ async function ensureSchedule(medplum: MedplumClient, practitioner: Practitioner
 async function ensureSlots(medplum: MedplumClient, schedule: Schedule, slotDate: Date): Promise<void> {
   const existingSlots = await medplum.searchResources(
     'Slot',
-    new URLSearchParams({
-      _summary: 'true',
-      schedule: getReferenceString(schedule),
-      start: ['gt' + slotDate.toISOString(), 'lt' + new Date(slotDate.getTime() + 24 * 60 * 60 * 1000).toISOString()],
-    })
+    new URLSearchParams([
+      ['_summary', 'true'],
+      ['schedule', getReferenceString(schedule)],
+      ['start', 'gt' + slotDate.toISOString()],
+      ['start', 'lt' + new Date(slotDate.getTime() + 24 * 60 * 60 * 1000).toISOString()],
+    ])
   );
 
   if (existingSlots.length > 0) {
