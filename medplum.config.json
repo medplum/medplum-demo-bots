@@ -17,6 +17,12 @@
       "id": "daae7b6b-3481-4a60-a4b1-31f8fbff4468",
       "source": "src/examples/create-pdf.ts",
       "dist": "dist/create-pdf.js"
+    },
+    {
+      "name": "sample-account-setup",
+      "id": "aa3a0383-a97b-4172-b65d-430f6241646f",
+      "source": "src/examples/sample-account-setup.ts",
+      "dist": "dist/sample-account-setup.js"
     }
   ]
 }
