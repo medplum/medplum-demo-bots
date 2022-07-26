@@ -8,8 +8,7 @@
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "prettier": "prettier --write .",
-    "deploy:hello-world": "medplum deploy-bot dist/hello-world.js e54fa800-02ab-41be-8d48-8c027dd85f0c"
+    "prettier": "prettier --write ."
   },
   "author": "Medplum <hello@medplum.com>",
   "license": "Apache-2.0",

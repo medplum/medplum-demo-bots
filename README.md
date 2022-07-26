@@ -10,10 +10,15 @@ To set up your bot deployment you will need to do the following:
 
 * [Create a Bot](https://app.medplum.com/admin/project) on Medplum and note its `id`. (All Bots in your account can be found [here](https://app.medplum.com/Bot))
 * Create a new typescript file (e.g. `my-bot.ts`) and copy the contents of `hello-world.ts` into your new file.
-* With the `id` of the Bot `id` in hand, add a line to `package.json` in the `scripts` section like so.
+* With the `id` of the Bot `id` in hand, add a section to `medplum.config.json` like so
 
 ```json
-"deploy:my-bot": "medplum deploy-bot dist/my-bot.js <bot-id>"
+    {
+      "name": "sample-account-setup",
+      "id": "aa3a0383-a97b-4172-b65d-430f6241646f",
+      "source": "src/examples/sample-account-setup.ts",
+      "dist": "dist/sample-account-setup.js"
+    }
 ```
 
 * [Create an ClientApplication](https://app.medplum.com/ClientApplication/new) on Medplum. (All ClientApplications in your account can be found [here](https://app.medplum.com/ClientApplication))
@@ -45,15 +50,14 @@ npm t
 Deploy one bot:
 
 ```bash
-npm run deploy:hello-world
+npx medplum deploy-bot sample-account-setup
 ```
 
-## Publishing your Bot
+You will see the following in your command prompt if all goes well:
 
-Before your bot runs in production you will need to publish it. Publishing only works from the Medplum app.
-
-* Navigate to the [Bots page](https://app.medplum.com/Bot/)
-* Go to the `Editor` tab
-* Click on the `Publish` button
-
-After a few seconds your bot will be published and run in production.
+```bash
+Update bot code.....
+Success! New bot version: 7fcbc375-4192-471c-b874-b3f0d4676226
+Deploying bot...
+Deploy result: All OK
+```
