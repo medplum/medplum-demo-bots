@@ -19,5 +19,5 @@ test('New patient', async () => {
   expect(check.generalPractitioner).toHaveLength(1);
 
   const observations = await medplum.searchResources('Observation', 'subject=Patient/' + patient.id);
-  expect(observations).toHaveLength(7);
+  expect(observations.length).toBeGreaterThanOrEqual(1);
 });

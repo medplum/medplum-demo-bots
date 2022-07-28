@@ -1,29 +1,57 @@
-import { BotEvent, createReference, getDisplayString, getReferenceString, MedplumClient } from '@medplum/core';
-import { BundleEntry, Observation, Patient, Practitioner, Schedule } from '@medplum/fhirtypes';
+import { BotEvent, createReference, getReferenceString, MedplumClient } from '@medplum/core';
+import {
+  BundleEntry,
+  CarePlan,
+  Communication,
+  DiagnosticReport,
+  Immunization,
+  MedicationRequest,
+  Observation,
+  Patient,
+  Practitioner,
+  Resource,
+  Schedule,
+} from '@medplum/fhirtypes';
 
 export async function handler(medplum: MedplumClient, event: BotEvent): Promise<any> {
   const patient = event.input as Patient;
   const patientHistory = await medplum.readHistory('Patient', patient.id as string);
   if ((patientHistory.entry as BundleEntry[]).length > 1) {
+    console.log('Patient already has history');
     return;
   }
 
+  console.log('Setting practitioner...');
   const practitioner = await getPractitioner(medplum);
   patient.generalPractitioner = [createReference(practitioner)];
   await medplum.updateResource(patient);
 
-  await createCompletedCarePlan(medplum, patient);
-  await createActiveCarePlan(medplum, patient);
-  await createDiagnosticReport(medplum, patient);
-  await createMedicationRequests(medplum, patient, practitioner);
-  await createImmunizations(medplum, patient);
-  await createBloodPressureObservation(medplum, patient);
-  await createTemperatureObservation(medplum, patient);
-  await createHeightObservation(medplum, patient);
-  await createWeightObservation(medplum, patient);
-  await createRespiratoryRateObservation(medplum, patient);
-  await createHeartRateObservation(medplum, patient);
-  await createWelcomeMessage(medplum, patient, practitioner);
+  console.log('Creating A1C...');
+  const a1c = await medplum.createResource(createA1CObservation(patient));
+
+  const entries: BundleEntry[] = [];
+  entries.push(createEntry(createCompletedCarePlan(patient)));
+  entries.push(createEntry(createActiveCarePlan(patient)));
+  entries.push(createEntry(createDiagnosticReport(patient, a1c)));
+  entries.push(createEntry(createActiveMedicationRequest(patient, practitioner)));
+  entries.push(createEntry(createStoppedMedicationRequest(patient, practitioner)));
+  entries.push(createEntry(createCompletedImmunization(patient)));
+  entries.push(createEntry(createIncompleteImmunization(patient)));
+  entries.push(createEntry(createBloodPressureObservation(patient)));
+  entries.push(createEntry(createTemperatureObservation(patient)));
+  entries.push(createEntry(createHeightObservation(patient)));
+  entries.push(createEntry(createWeightObservation(patient)));
+  entries.push(createEntry(createRespiratoryRateObservation(patient)));
+  entries.push(createEntry(createHeartRateObservation(patient)));
+  entries.push(createEntry(createWelcomeMessage(patient, practitioner)));
+
+  console.log('Creating history...');
+  const result = await medplum.executeBatch({
+    resourceType: 'Bundle',
+    type: 'batch',
+    entry: entries,
+  });
+  console.log(result.entry?.map((entry) => entry.response?.status));
 }
 
 /**
@@ -55,7 +83,7 @@ async function getPractitioner(medplum: MedplumClient): Promise<Practitioner> {
         },
       ],
     },
-    'Practitioner?identifier=123456789'
+    'identifier=123456789'
   );
 
   // Make sure the practitioner has a schedule
@@ -77,7 +105,7 @@ async function ensureSchedule(medplum: MedplumClient, practitioner: Practitioner
       id: 'schedule',
       actor: [createReference(practitioner)],
     },
-    'Schedule?actor=Practitioner/' + practitioner.id
+    'actor=Practitioner/' + practitioner.id
   );
 
   // Ensure there are slots for the next 30 days
@@ -122,11 +150,10 @@ async function ensureSlots(medplum: MedplumClient, schedule: Schedule, slotDate:
 
 /**
  * Creates a CarePlan that was completed in the past.
- * @param medplum The medplum client.
  * @param patient The patient.
  */
-async function createCompletedCarePlan(medplum: MedplumClient, patient: Patient): Promise<void> {
-  await medplum.createResource({
+function createCompletedCarePlan(patient: Patient): CarePlan {
+  return {
     resourceType: 'CarePlan',
     status: 'completed',
     intent: 'order',
@@ -154,16 +181,15 @@ async function createCompletedCarePlan(medplum: MedplumClient, patient: Patient)
         text: 'Respiratory therapy',
       },
     ],
-  });
+  };
 }
 
 /**
  * Creates an active CarePlan that starts today.
- * @param medplum The medplum client.
  * @param patient The patient.
  */
-async function createActiveCarePlan(medplum: MedplumClient, patient: Patient): Promise<void> {
-  await medplum.createResource({
+function createActiveCarePlan(patient: Patient): CarePlan {
+  return {
     resourceType: 'CarePlan',
     status: 'active',
     intent: 'order',
@@ -190,16 +216,11 @@ async function createActiveCarePlan(medplum: MedplumClient, patient: Patient): P
         text: 'Routine antenatal care',
       },
     ],
-  });
+  };
 }
 
-/**
- * Creates a DiagnosticReport with an A1C observation.
- * @param medplum The medplum client.
- * @param patient The patient.
- */
-async function createDiagnosticReport(medplum: MedplumClient, patient: Patient): Promise<void> {
-  const hemoglobinA1c = await medplum.createResource<Observation>({
+function createA1CObservation(patient: Patient): Observation {
+  return {
     resourceType: 'Observation',
     subject: createReference(patient),
     code: {
@@ -216,30 +237,27 @@ async function createDiagnosticReport(medplum: MedplumClient, patient: Patient):
         },
       },
     ],
-  });
+  };
+}
 
-  await medplum.createResource({
+/**
+ * Creates a DiagnosticReport with an A1C observation.
+ * @param patient The patient.
+ */
+function createDiagnosticReport(patient: Patient, a1c: Observation): DiagnosticReport {
+  return {
     resourceType: 'DiagnosticReport',
     status: 'final',
     code: {
       text: 'Hemoglobin A1c',
     },
     subject: createReference(patient),
-    result: [
-      {
-        reference: createReference(hemoglobinA1c).reference,
-        display: getDisplayString(hemoglobinA1c),
-      },
-    ],
-  });
+    result: [createReference(a1c)],
+  };
 }
 
-async function createMedicationRequests(
-  medplum: MedplumClient,
-  patient: Patient,
-  practitioner: Practitioner
-): Promise<void> {
-  await medplum.createResource({
+function createActiveMedicationRequest(patient: Patient, practitioner: Practitioner): MedicationRequest {
+  return {
     resourceType: 'MedicationRequest',
     status: 'active',
     intent: 'order',
@@ -263,9 +281,11 @@ async function createMedicationRequests(
     medicationCodeableConcept: {
       text: '72 HR Fentanyl 0.025 MG/HR Transdermal System',
     },
-  });
+  };
+}
 
-  await medplum.createResource({
+function createStoppedMedicationRequest(patient: Patient, practitioner: Practitioner): MedicationRequest {
+  return {
     resourceType: 'MedicationRequest',
     status: 'stopped',
     intent: 'order',
@@ -289,11 +309,11 @@ async function createMedicationRequests(
     medicationCodeableConcept: {
       text: 'Acetaminophen 325 MG / Oxycodone Hydrochloride 10 MG Oral Tablet [Percocet]',
     },
-  });
+  };
 }
 
-async function createImmunizations(medplum: MedplumClient, patient: Patient): Promise<void> {
-  await medplum.createResource({
+function createCompletedImmunization(patient: Patient): Immunization {
+  return {
     resourceType: 'Immunization',
     status: 'completed',
     patient: createReference(patient),
@@ -304,9 +324,11 @@ async function createImmunizations(medplum: MedplumClient, patient: Patient): Pr
     vaccineCode: {
       text: 'SARS-COV-2 (COVID-19) vaccine, mRNA, spike protein, LNP, preservative free, 100 mcg/0.5mL dose',
     },
-  });
+  };
+}
 
-  await medplum.createResource({
+function createIncompleteImmunization(patient: Patient): Immunization {
+  return {
     resourceType: 'Immunization',
     status: 'not-done',
     patient: createReference(patient),
@@ -316,11 +338,11 @@ async function createImmunizations(medplum: MedplumClient, patient: Patient): Pr
     vaccineCode: {
       text: 'Influenza, seasonal, injectable, preservative free',
     },
-  });
+  };
 }
 
-async function createBloodPressureObservation(medplum: MedplumClient, patient: Patient): Promise<void> {
-  await medplum.createResource({
+function createBloodPressureObservation(patient: Patient): Observation {
+  return {
     resourceType: 'Observation',
     subject: createReference(patient),
     code: {
@@ -373,11 +395,11 @@ async function createBloodPressureObservation(medplum: MedplumClient, patient: P
     ],
     effectiveDateTime: new Date().toISOString(),
     status: 'final',
-  });
+  };
 }
 
-async function createTemperatureObservation(medplum: MedplumClient, patient: Patient): Promise<void> {
-  await medplum.createResource({
+function createTemperatureObservation(patient: Patient): Observation {
+  return {
     resourceType: 'Observation',
     subject: createReference(patient),
     code: {
@@ -403,11 +425,11 @@ async function createTemperatureObservation(medplum: MedplumClient, patient: Pat
     },
     effectiveDateTime: new Date().toISOString(),
     status: 'final',
-  });
+  };
 }
 
-async function createHeightObservation(medplum: MedplumClient, patient: Patient): Promise<void> {
-  await medplum.createResource({
+function createHeightObservation(patient: Patient): Observation {
+  return {
     resourceType: 'Observation',
     subject: createReference(patient),
     code: {
@@ -428,11 +450,11 @@ async function createHeightObservation(medplum: MedplumClient, patient: Patient)
     },
     effectiveDateTime: new Date().toISOString(),
     status: 'final',
-  });
+  };
 }
 
-async function createWeightObservation(medplum: MedplumClient, patient: Patient): Promise<void> {
-  await medplum.createResource({
+function createWeightObservation(patient: Patient): Observation {
+  return {
     resourceType: 'Observation',
     subject: createReference(patient),
     code: {
@@ -453,11 +475,11 @@ async function createWeightObservation(medplum: MedplumClient, patient: Patient)
     },
     effectiveDateTime: new Date().toISOString(),
     status: 'final',
-  });
+  };
 }
 
-async function createRespiratoryRateObservation(medplum: MedplumClient, patient: Patient): Promise<void> {
-  await medplum.createResource({
+function createRespiratoryRateObservation(patient: Patient): Observation {
+  return {
     resourceType: 'Observation',
     subject: createReference(patient),
     code: {
@@ -478,11 +500,11 @@ async function createRespiratoryRateObservation(medplum: MedplumClient, patient:
     },
     effectiveDateTime: new Date().toISOString(),
     status: 'final',
-  });
+  };
 }
 
-async function createHeartRateObservation(medplum: MedplumClient, patient: Patient): Promise<void> {
-  await medplum.createResource({
+function createHeartRateObservation(patient: Patient): Observation {
+  return {
     resourceType: 'Observation',
     subject: createReference(patient),
     code: {
@@ -503,15 +525,11 @@ async function createHeartRateObservation(medplum: MedplumClient, patient: Patie
     },
     effectiveDateTime: new Date().toISOString(),
     status: 'final',
-  });
+  };
 }
 
-async function createWelcomeMessage(
-  medplum: MedplumClient,
-  patient: Patient,
-  practitioner: Practitioner
-): Promise<void> {
-  await medplum.createResource({
+function createWelcomeMessage(patient: Patient, practitioner: Practitioner): Communication {
+  return {
     resourceType: 'Communication',
     subject: createReference(patient),
     recipient: [createReference(patient)],
@@ -521,5 +539,15 @@ async function createWelcomeMessage(
         contentString: 'Hello and welcome to our practice',
       },
     ],
-  });
+  };
+}
+
+function createEntry(resource: Resource): BundleEntry {
+  return {
+    resource,
+    request: {
+      url: resource.resourceType,
+      method: 'POST',
+    },
+  };
 }
