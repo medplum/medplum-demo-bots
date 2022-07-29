@@ -37,12 +37,20 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
   entries.push(createEntry(createStoppedMedicationRequest(patient, practitioner)));
   entries.push(createEntry(createCompletedImmunization(patient)));
   entries.push(createEntry(createIncompleteImmunization(patient)));
-  entries.push(createEntry(createBloodPressureObservation(patient)));
-  entries.push(createEntry(createTemperatureObservation(patient)));
-  entries.push(createEntry(createHeightObservation(patient)));
-  entries.push(createEntry(createWeightObservation(patient)));
-  entries.push(createEntry(createRespiratoryRateObservation(patient)));
-  entries.push(createEntry(createHeartRateObservation(patient)));
+
+  // Simulate 10 visits
+  for (let i = 0; i < 10; i++) {
+    // Date is 10 days ago
+    const date = new Date();
+    date.setDate(date.getDate() - 10 + i);
+    entries.push(createEntry(createBloodPressureObservation(patient, date)));
+    entries.push(createEntry(createTemperatureObservation(patient, date)));
+    entries.push(createEntry(createHeightObservation(patient, date)));
+    entries.push(createEntry(createWeightObservation(patient, date)));
+    entries.push(createEntry(createRespiratoryRateObservation(patient, date)));
+    entries.push(createEntry(createHeartRateObservation(patient, date)));
+  }
+
   entries.push(createEntry(createWelcomeMessage(patient, practitioner)));
 
   console.log('Creating history...');
@@ -341,10 +349,12 @@ function createIncompleteImmunization(patient: Patient): Immunization {
   };
 }
 
-function createBloodPressureObservation(patient: Patient): Observation {
+function createBloodPressureObservation(patient: Patient, date: Date): Observation {
   return {
     resourceType: 'Observation',
     subject: createReference(patient),
+    issued: date.toISOString(),
+    effectiveDateTime: date.toISOString(),
     code: {
       coding: [
         {
@@ -371,7 +381,7 @@ function createBloodPressureObservation(patient: Patient): Observation {
           code: 'mm[Hg]',
           system: 'http://unitsofmeasure.org',
           unit: 'mm[Hg]',
-          value: 80,
+          value: 80 * observationRandomizer(),
         },
       },
       {
@@ -389,19 +399,20 @@ function createBloodPressureObservation(patient: Patient): Observation {
           code: 'mm[Hg]',
           system: 'http://unitsofmeasure.org',
           unit: 'mm[Hg]',
-          value: 120,
+          value: 120 * observationRandomizer(),
         },
       },
     ],
-    effectiveDateTime: new Date().toISOString(),
     status: 'final',
   };
 }
 
-function createTemperatureObservation(patient: Patient): Observation {
+function createTemperatureObservation(patient: Patient, date: Date): Observation {
   return {
     resourceType: 'Observation',
     subject: createReference(patient),
+    issued: date.toISOString(),
+    effectiveDateTime: date.toISOString(),
     code: {
       coding: [
         {
@@ -421,17 +432,18 @@ function createTemperatureObservation(patient: Patient): Observation {
       code: 'Cel',
       system: 'http://unitsofmeasure.org',
       unit: 'Cel',
-      value: 36.6,
+      value: 36.6 * observationRandomizer(),
     },
-    effectiveDateTime: new Date().toISOString(),
     status: 'final',
   };
 }
 
-function createHeightObservation(patient: Patient): Observation {
+function createHeightObservation(patient: Patient, date: Date): Observation {
   return {
     resourceType: 'Observation',
     subject: createReference(patient),
+    issued: date.toISOString(),
+    effectiveDateTime: date.toISOString(),
     code: {
       coding: [
         {
@@ -446,17 +458,18 @@ function createHeightObservation(patient: Patient): Observation {
       code: 'cm',
       system: 'http://unitsofmeasure.org',
       unit: 'cm',
-      value: 175,
+      value: 175 * observationRandomizer(),
     },
-    effectiveDateTime: new Date().toISOString(),
     status: 'final',
   };
 }
 
-function createWeightObservation(patient: Patient): Observation {
+function createWeightObservation(patient: Patient, date: Date): Observation {
   return {
     resourceType: 'Observation',
     subject: createReference(patient),
+    issued: date.toISOString(),
+    effectiveDateTime: date.toISOString(),
     code: {
       coding: [
         {
@@ -471,17 +484,18 @@ function createWeightObservation(patient: Patient): Observation {
       code: 'kg',
       system: 'http://unitsofmeasure.org',
       unit: 'kg',
-      value: 70,
+      value: 70 * observationRandomizer(),
     },
-    effectiveDateTime: new Date().toISOString(),
     status: 'final',
   };
 }
 
-function createRespiratoryRateObservation(patient: Patient): Observation {
+function createRespiratoryRateObservation(patient: Patient, date: Date): Observation {
   return {
     resourceType: 'Observation',
     subject: createReference(patient),
+    issued: date.toISOString(),
+    effectiveDateTime: date.toISOString(),
     code: {
       coding: [
         {
@@ -496,17 +510,18 @@ function createRespiratoryRateObservation(patient: Patient): Observation {
       code: '/min',
       system: 'http://unitsofmeasure.org',
       unit: '/min',
-      value: 15,
+      value: 15 * observationRandomizer(),
     },
-    effectiveDateTime: new Date().toISOString(),
     status: 'final',
   };
 }
 
-function createHeartRateObservation(patient: Patient): Observation {
+function createHeartRateObservation(patient: Patient, date: Date): Observation {
   return {
     resourceType: 'Observation',
     subject: createReference(patient),
+    issued: date.toISOString(),
+    effectiveDateTime: date.toISOString(),
     code: {
       coding: [
         {
@@ -521,9 +536,8 @@ function createHeartRateObservation(patient: Patient): Observation {
       code: '/min',
       system: 'http://unitsofmeasure.org',
       unit: '/min',
-      value: 80,
+      value: 80 * observationRandomizer(),
     },
-    effectiveDateTime: new Date().toISOString(),
     status: 'final',
   };
 }
@@ -550,4 +564,9 @@ function createEntry(resource: Resource): BundleEntry {
       method: 'POST',
     },
   };
+}
+
+function observationRandomizer(): number {
+  // Return +/- 1%
+  return 0.99 + Math.random() * 0.02;
 }
