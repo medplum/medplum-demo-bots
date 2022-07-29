@@ -279,7 +279,7 @@ function createActiveMedicationRequest(patient: Patient, practitioner: Practitio
     ],
     authoredOn: new Date().toISOString(),
     medicationCodeableConcept: {
-      text: '72 HR Fentanyl 0.025 MG/HR Transdermal System',
+      text: 'Amoxicillin 500mg',
     },
   };
 }
@@ -307,7 +307,7 @@ function createStoppedMedicationRequest(patient: Patient, practitioner: Practiti
     ],
     authoredOn: new Date().toISOString(),
     medicationCodeableConcept: {
-      text: 'Acetaminophen 325 MG / Oxycodone Hydrochloride 10 MG Oral Tablet [Percocet]',
+      text: 'Biaxin XL (clarithromycin) 500mg',
     },
   };
 }
