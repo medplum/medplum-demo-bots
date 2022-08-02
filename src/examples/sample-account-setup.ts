@@ -42,8 +42,6 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
   entries.push(createEntry(createCompletedImmunization(patient)));
   entries.push(createEntry(createIncompleteImmunization(patient)));
 
-  console.debug(entries);
-
   // Simulate 10 visits
   for (let i = 0; i < 10; i++) {
     // Date is 10 days ago
