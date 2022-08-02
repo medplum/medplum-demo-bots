@@ -23,6 +23,12 @@
       "id": "aa3a0383-a97b-4172-b65d-430f6241646f",
       "source": "src/examples/sample-account-setup.ts",
       "dist": "dist/sample-account-setup.js"
+    },
+    {
+      "name": "sample-account-staging",
+      "id": "4b11b133-b181-4858-a7b0-75dd9d4f2e88",
+      "source": "src/examples/sample-account-setup.ts",
+      "dist": "dist/sample-account-setup.js"
     }
   ]
 }

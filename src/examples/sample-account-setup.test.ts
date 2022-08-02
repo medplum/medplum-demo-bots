@@ -1,4 +1,4 @@
-import { BotEvent } from '@medplum/core';
+import { BotEvent, getReferenceString } from '@medplum/core';
 import { Patient } from '@medplum/fhirtypes';
 import { MockClient } from '@medplum/mock';
 import { expect } from 'vitest';
@@ -18,6 +18,11 @@ test('New patient', async () => {
   expect(check.generalPractitioner).toBeDefined();
   expect(check.generalPractitioner).toHaveLength(1);
 
-  const observations = await medplum.searchResources('Observation', 'subject=Patient/' + patient.id);
+  const observations = await medplum.searchResources('Observation', `subject=${getReferenceString(patient)}`);
   expect(observations.length).toBeGreaterThanOrEqual(1);
+
+  const tasks = await medplum.searchResources('Task', `subject=${getReferenceString(patient)}`);
+  expect(tasks.length).toEqual(3);
+  expect(tasks.filter((t) => t.status === 'completed')).toHaveLength(2);
+  expect(tasks.filter((t) => t.status === 'in-progress')).toHaveLength(1);
 });

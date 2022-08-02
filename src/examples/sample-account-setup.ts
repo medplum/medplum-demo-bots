@@ -9,8 +9,12 @@ import {
   Observation,
   Patient,
   Practitioner,
+  Reference,
+  RequestGroup,
+  RequestGroupAction,
   Resource,
   Schedule,
+  Task,
 } from '@medplum/fhirtypes';
 
 export async function handler(medplum: MedplumClient, event: BotEvent): Promise<any> {
@@ -29,9 +33,11 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
   console.log('Creating A1C...');
   const a1c = await medplum.createResource(createA1CObservation(patient));
 
+  console.log('Creating Care Plans...');
+  await createCompletedCarePlan(medplum, patient);
+  await createActiveCarePlan(medplum, patient);
+
   const entries: BundleEntry[] = [];
-  entries.push(createEntry(createCompletedCarePlan(patient)));
-  entries.push(createEntry(createActiveCarePlan(patient)));
   entries.push(createEntry(createDiagnosticReport(patient, a1c)));
   entries.push(createEntry(createActiveMedicationRequest(patient, practitioner)));
   entries.push(createEntry(createStoppedMedicationRequest(patient, practitioner)));
@@ -158,73 +164,108 @@ async function ensureSlots(medplum: MedplumClient, schedule: Schedule, slotDate:
 
 /**
  * Creates a CarePlan that was completed in the past.
+ * @param medplum The medplum client
  * @param patient The patient.
  */
-function createCompletedCarePlan(patient: Patient): CarePlan {
-  return {
-    resourceType: 'CarePlan',
-    status: 'completed',
-    intent: 'order',
-    subject: createReference(patient),
-    activity: [
-      {
-        detail: {
-          code: {
-            text: 'Recommendation to avoid exercise',
-          },
-          location: {
-            display: 'FOOMEDICAL HOSPITAL AND MEDICAL CENTERS',
-          },
-          status: 'completed',
-        },
+async function createCompletedCarePlan(medplum: MedplumClient, patient: Patient) {
+  const tasks: Task[] = [
+    {
+      resourceType: 'Task',
+      intent: 'order',
+      status: 'completed',
+      code: { text: 'medical-history' },
+      description: 'Complete Medical History',
+      location: {
+        display: 'AT HOME',
       },
-    ],
-    title: 'Respiratory therapy',
-    period: {
-      start: '2020-01-01T00:00:00.000Z',
-      end: '2021-01-01T00:00:00.000Z',
+      owner: createReference(patient),
     },
-    category: [
-      {
-        text: 'Respiratory therapy',
+    {
+      resourceType: 'Task',
+      intent: 'order',
+      status: 'completed',
+      code: { text: 'respiratory-screening' },
+      description: 'Respiratory Screening',
+      location: {
+        display: 'FOOMEDICAL HOSPITAL AND MEDICAL CENTERS',
       },
-    ],
-  };
+      executionPeriod: {
+        start: '2020-01-01T00:00:00.000Z',
+        end: '2021-01-01T00:00:00.000Z',
+      },
+      owner: createReference(patient),
+    },
+  ];
+
+  createCarePlan(medplum, patient, tasks);
 }
 
 /**
  * Creates an active CarePlan that starts today.
  * @param patient The patient.
  */
-function createActiveCarePlan(patient: Patient): CarePlan {
-  return {
+async function createActiveCarePlan(medplum: MedplumClient, patient: Patient) {
+  const tasks: Task[] = [
+    {
+      resourceType: 'Task',
+      intent: 'order',
+      status: 'in-progress',
+      code: { text: 'antenatal-education' },
+      location: {
+        display: 'AT HOME',
+      },
+      description: 'Routine Antenatal Care',
+      owner: createReference(patient),
+      executionPeriod: {
+        start: new Date().toISOString(),
+      },
+    },
+  ];
+  createCarePlan(medplum, patient, tasks);
+}
+
+/**
+ * Creates a Care Plan based on the tasks for the given patient
+ * @param medplum The medplum client
+ * @param patient The patient
+ * @param tasks The set of tasks to complete for the care plan
+ */
+async function createCarePlan(medplum: MedplumClient, patient: Patient, tasks: Task[]): Promise<CarePlan> {
+  tasks = await Promise.all(
+    tasks.map((task) => {
+      task.owner = createReference(patient);
+      return medplum.createResource(task);
+    })
+  );
+
+  const status = tasks[0]?.status;
+
+  const requestGroup = await medplum.createResource<RequestGroup>({
+    resourceType: 'RequestGroup',
+    status,
+    intent: 'order',
+    action: tasks.map(
+      (t: Task): RequestGroupAction => ({
+        resource: createReference(t),
+        title: t.description,
+        participant: [t.owner as Reference<Patient>],
+      })
+    ),
+  });
+
+  const carePlan: CarePlan = await medplum.createResource<CarePlan>({
     resourceType: 'CarePlan',
-    status: 'active',
+    status,
     intent: 'order',
     subject: createReference(patient),
     activity: [
       {
-        detail: {
-          code: {
-            text: 'Antenatal education',
-          },
-          location: {
-            display: 'FOOMEDICAL HOSPITAL AND MEDICAL CENTERS',
-          },
-          status: 'in-progress',
-        },
+        reference: createReference(requestGroup),
       },
     ],
-    title: 'Routine antenatal care',
-    period: {
-      start: new Date().toISOString(),
-    },
-    category: [
-      {
-        text: 'Routine antenatal care',
-      },
-    ],
-  };
+  });
+
+  return carePlan;
 }
 
 function createA1CObservation(patient: Patient): Observation {
