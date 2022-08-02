@@ -33,9 +33,11 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
   console.log('Creating A1C...');
   const a1c = await medplum.createResource(createA1CObservation(patient));
 
+  console.log('Creating Care Plans...');
+  await createCompletedCarePlan(medplum, patient);
+  await createActiveCarePlan(medplum, patient);
+
   const entries: BundleEntry[] = [];
-  entries.push(...createCompletedCarePlan(patient).map(createEntry));
-  entries.push(...createActiveCarePlan(patient).map(createEntry));
   entries.push(createEntry(createDiagnosticReport(patient, a1c)));
   entries.push(createEntry(createActiveMedicationRequest(patient, practitioner)));
   entries.push(createEntry(createStoppedMedicationRequest(patient, practitioner)));
@@ -162,9 +164,10 @@ async function ensureSlots(medplum: MedplumClient, schedule: Schedule, slotDate:
 
 /**
  * Creates a CarePlan that was completed in the past.
+ * @param medplum The medplum client
  * @param patient The patient.
  */
-function createCompletedCarePlan(patient: Patient): Resource[] {
+async function createCompletedCarePlan(medplum: MedplumClient, patient: Patient) {
   const tasks: Task[] = [
     {
       resourceType: 'Task',
@@ -194,39 +197,14 @@ function createCompletedCarePlan(patient: Patient): Resource[] {
     },
   ];
 
-  const requestGroup: RequestGroup = {
-    resourceType: 'RequestGroup',
-    status: 'completed',
-    intent: 'order',
-    action: tasks.map(
-      (t: Task): RequestGroupAction => ({
-        resource: createReference(t),
-        title: t.description,
-        participant: [t.owner as Reference<Patient>],
-      })
-    ),
-  };
-
-  const carePlan: CarePlan = {
-    resourceType: 'CarePlan',
-    status: 'completed',
-    intent: 'order',
-    subject: createReference(patient),
-    activity: [
-      {
-        reference: createReference(requestGroup),
-      },
-    ],
-  };
-
-  return [...tasks, requestGroup, carePlan];
+  createCarePlan(medplum, patient, tasks);
 }
 
 /**
  * Creates an active CarePlan that starts today.
  * @param patient The patient.
  */
-function createActiveCarePlan(patient: Patient): Resource[] {
+async function createActiveCarePlan(medplum: MedplumClient, patient: Patient) {
   const tasks: Task[] = [
     {
       resourceType: 'Task',
@@ -243,10 +221,28 @@ function createActiveCarePlan(patient: Patient): Resource[] {
       },
     },
   ];
+  createCarePlan(medplum, patient, tasks);
+}
 
-  const requestGroup: RequestGroup = {
+/**
+ * Creates a Care Plan based on the tasks for the given patient
+ * @param medplum The medplum client
+ * @param patient The patient
+ * @param tasks The set of tasks to complete for the care plan
+ */
+async function createCarePlan(medplum: MedplumClient, patient: Patient, tasks: Task[]): Promise<CarePlan> {
+  tasks = await Promise.all(
+    tasks.map((task) => {
+      task.owner = createReference(patient);
+      return medplum.createResource(task);
+    })
+  );
+
+  const status = tasks[0]?.status;
+
+  const requestGroup = await medplum.createResource<RequestGroup>({
     resourceType: 'RequestGroup',
-    status: 'completed',
+    status,
     intent: 'order',
     action: tasks.map(
       (t: Task): RequestGroupAction => ({
@@ -255,11 +251,11 @@ function createActiveCarePlan(patient: Patient): Resource[] {
         participant: [t.owner as Reference<Patient>],
       })
     ),
-  };
+  });
 
-  const carePlan: CarePlan = {
+  const carePlan: CarePlan = await medplum.createResource<CarePlan>({
     resourceType: 'CarePlan',
-    status: 'completed',
+    status,
     intent: 'order',
     subject: createReference(patient),
     activity: [
@@ -267,9 +263,9 @@ function createActiveCarePlan(patient: Patient): Resource[] {
         reference: createReference(requestGroup),
       },
     ],
-  };
+  });
 
-  return [...tasks, requestGroup, carePlan];
+  return carePlan;
 }
 
 function createA1CObservation(patient: Patient): Observation {
