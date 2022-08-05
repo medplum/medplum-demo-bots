@@ -138,7 +138,7 @@ async function ensureSchedule(medplum: MedplumClient, practitioner: Practitioner
  * @param slotDate The day of slots.
  */
 async function ensureSlots(medplum: MedplumClient, schedule: Schedule, slotDate: Date): Promise<void> {
-  const existingSlots = await medplum.searchResources(
+  const existingSlots = await medplum.search(
     'Slot',
     new URLSearchParams([
       ['_summary', 'true'],
@@ -148,7 +148,7 @@ async function ensureSlots(medplum: MedplumClient, schedule: Schedule, slotDate:
     ])
   );
 
-  if (existingSlots.length > 0) {
+  if ((existingSlots.total as number) > 0) {
     return;
   }
 
