@@ -18,15 +18,15 @@
     "@medplum/fhirtypes": "0.9.28",
     "@medplum/mock": "0.9.28",
     "@types/node": "18.0.6",
+    "@vitest/ui": "0.18.1",
     "c8": "7.12.0",
     "eslint": "8.20.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-prettier": "4.2.1",
-    "node-fetch": "3.2.9",
+    "node-fetch": "^3.2.10",
     "prettier": "2.7.1",
     "typescript": "4.7.4",
-    "vitest": "0.18.1",
-    "@vitest/ui": "0.18.1"
+    "vitest": "0.18.1"
   },
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",
