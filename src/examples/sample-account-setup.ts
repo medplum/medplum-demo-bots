@@ -244,6 +244,7 @@ async function createCarePlan(medplum: MedplumClient, patient: Patient, tasks: T
     resourceType: 'RequestGroup',
     status,
     intent: 'order',
+    subject: createReference(patient),
     action: tasks.map(
       (t: Task): RequestGroupAction => ({
         resource: createReference(t),
