@@ -13,20 +13,20 @@
   "author": "Medplum <hello@medplum.com>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@medplum/cli": "0.9.30",
-    "@medplum/core": "0.9.30",
-    "@medplum/fhirtypes": "0.9.30",
-    "@medplum/mock": "0.9.30",
-    "@types/node": "18.6.5",
-    "@vitest/ui": "0.21.0",
+    "@medplum/cli": "0.9.31",
+    "@medplum/core": "0.9.31",
+    "@medplum/fhirtypes": "0.9.31",
+    "@medplum/mock": "0.9.31",
+    "@types/node": "18.7.6",
+    "@vitest/ui": "0.22.0",
     "c8": "7.12.0",
-    "eslint": "8.21.0",
+    "eslint": "8.22.0",
     "eslint-config-prettier": "8.5.0",
     "eslint-plugin-prettier": "4.2.1",
     "node-fetch": "^3.2.10",
     "prettier": "2.7.1",
     "typescript": "4.7.4",
-    "vitest": "0.21.0"
+    "vitest": "0.22.0"
   },
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",
