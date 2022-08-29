@@ -179,6 +179,7 @@ async function createCompletedCarePlan(medplum: MedplumClient, patient: Patient)
         display: 'AT HOME',
       },
       owner: createReference(patient),
+      focus: createReference(patient),
     },
     {
       resourceType: 'Task',
@@ -194,6 +195,7 @@ async function createCompletedCarePlan(medplum: MedplumClient, patient: Patient)
         end: '2021-01-01T00:00:00.000Z',
       },
       owner: createReference(patient),
+      focus: createReference(patient),
     },
   ];
 
@@ -216,6 +218,7 @@ async function createActiveCarePlan(medplum: MedplumClient, patient: Patient) {
       },
       description: 'Routine Antenatal Care',
       owner: createReference(patient),
+      focus: createReference(patient),
       executionPeriod: {
         start: new Date().toISOString(),
       },
@@ -258,6 +261,7 @@ async function createCarePlan(medplum: MedplumClient, patient: Patient, tasks: T
     resourceType: 'CarePlan',
     status,
     intent: 'order',
+    title: tasks[0].description,
     subject: createReference(patient),
     activity: [
       {
