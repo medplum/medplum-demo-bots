@@ -73,6 +73,10 @@ test.skip('Success', async () => {
     status: 'active',
   };
 
-  const result = await handler(medplum, { input, contentType });
+  const result = await handler(medplum, {
+    input,
+    contentType,
+    secrets: { OPKIT_API_KEY: { name: 'OPKIT_API_KEY', valueString: '1234567890' } },
+  });
   expect(result).toBe(true);
 });

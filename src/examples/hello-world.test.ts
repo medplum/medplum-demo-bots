@@ -7,5 +7,5 @@ const medplum = new MockClient();
 test('Hello world', () => {
   const input = 'Hello';
   const contentType = 'text/plain';
-  expect(handler(medplum, { input, contentType })).resolves.toBe(true);
+  expect(handler(medplum, { input, contentType, secrets: {} })).resolves.toBe(true);
 });
