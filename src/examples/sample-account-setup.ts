@@ -9,6 +9,7 @@ import {
   Observation,
   Patient,
   Practitioner,
+  Questionnaire,
   Reference,
   RequestGroup,
   RequestGroupAction,
@@ -24,6 +25,9 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     console.log('Patient already has history');
     return;
   }
+
+  console.log('Creating questionnaire library...');
+  await ensureQuestionnaire(medplum);
 
   console.log('Setting practitioner...');
   const practitioner = await getPractitioner(medplum);
@@ -66,6 +70,65 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     entry: entries,
   });
   console.log(result.entry?.map((entry) => entry.response?.status));
+}
+
+/**
+ * Returns a practitioner resource.
+ * Creates the practitioner if one does not already exist.
+ * @param medplum The medplum client.
+ * @returns The practitioner resource.
+ */
+async function ensureQuestionnaire(medplum: MedplumClient) {
+  const questionnaire = await medplum.searchOne('Questionnaire', 'title=Order Lab Tests');
+  if (questionnaire) {
+    return;
+  }
+  medplum.createResource({
+    resourceType: 'Questionnaire',
+    name: 'Lab Test Orders',
+    title: 'Order Lab Tests',
+    status: 'active',
+    item: [
+      {
+        id: 'id-2',
+        linkId: 'panel',
+        type: 'choice',
+        text: 'What type of lab would you like to order?',
+        answerOption: [
+          {
+            id: 'id-3',
+            valueString: 'Metabolic Panel LOINC: 24323-8',
+          },
+          {
+            id: 'id-4',
+            valueString: 'Lipid Panel LOINC: 24331-1',
+          },
+          {
+            id: 'id-5',
+            valueString: 'CBC With Differential LOINC: 57021-8',
+          },
+        ],
+      },
+      {
+        id: 'id-6',
+        linkId: 'specimen',
+        type: 'choice',
+        text: 'What specimen type is required?',
+        answerOption: [
+          {
+            id: 'id-7',
+            valueString: 'Serum/Plasma',
+          },
+          {
+            id: 'id-8',
+            valueString: 'Whole blood',
+          },
+        ],
+      },
+    ],
+    subjectType: ['Patient'],
+  });
+  return;
 }
 
 /**
