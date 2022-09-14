@@ -1,4 +1,4 @@
-import { BotEvent, createReference, formatHumanName, getReferenceString, MedplumClient } from '@medplum/core';
+import { BotEvent, createReference, getReferenceString, MedplumClient } from '@medplum/core';
 import {
   AllergyIntolerance,
   BundleEntry,
@@ -475,10 +475,7 @@ function createAllergyIntolerance(patient: Patient, practitioner: Practitioner):
     type: 'allergy',
     category: ['medication'],
     criticality: 'high',
-    subject: createReference(patient),
-    patient: {
-      reference: createReference(patient),
-    },
+    patient: createReference(patient),
     code: {
       text: 'penicillin',
     },
@@ -531,9 +528,7 @@ function createMedicalCondition(patient: Patient, practitioner: Practitioner): C
       ],
       text: 'Child attention deficit disorder',
     },
-    subject: {
-      reference: createReference(patient),
-    },
+    subject: createReference(patient),
     note: [
       {
         text: 'Medical Condition Clinical Decision Support: https://www.uptodate.com/contents/search?search=adhd',
