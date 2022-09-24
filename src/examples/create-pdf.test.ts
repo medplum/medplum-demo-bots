@@ -8,7 +8,7 @@ test('Create PDF', async () => {
   const input = 'Hello';
   const contentType = 'text/plain';
 
-  const media = await handler(medplum, { input, contentType });
+  const media = await handler(medplum, { input, contentType, secrets: {} });
   expect(media).toBeDefined();
   expect(media.resourceType).toEqual('Media');
   expect(media.content.contentType).toEqual('application/pdf');
