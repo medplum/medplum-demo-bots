@@ -1,7 +1,7 @@
 import { BotEvent, Hl7Message, MedplumClient } from '@medplum/core';
 import { Patient } from '@medplum/fhirtypes';
 
-export async function handler(medplum: MedplumClient, event: BotEvent): Promise<any> {
+export async function handler(medplum: MedplumClient, event: BotEvent): Promise<Hl7Message> {
   const input = event.input as Hl7Message;
   // Log Message Type
   const messageType = input.get('MSH')?.get(8);
@@ -40,5 +40,5 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
   // Based on the messageType, you may consider making additional FHIR objects here
 
   // Return Ack
-  return input.buildAck().toString();
+  return input.buildAck();
 }
