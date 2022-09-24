@@ -16,7 +16,6 @@ import {
   Schedule,
   Task,
 } from '@medplum/fhirtypes';
-import { STATUS_CODES } from 'http';
 
 export async function handler(medplum: MedplumClient, event: BotEvent): Promise<any> {
   const patient = event.input as Patient;

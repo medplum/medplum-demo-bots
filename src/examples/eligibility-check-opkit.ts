@@ -285,7 +285,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
 
   const coverageEligibilityResponse: CoverageEligibilityResponse = await medplum.createResource({
     resourceType: 'CoverageEligibilityResponse',
-    status: isPlanActive ? 'active' : 'inactive',
+    status: isPlanActive ? 'active' : 'cancelled',
     outcome: 'complete',
     purpose: ['validation', 'benefits'],
     request: createReference(coverageEligibilityReq),

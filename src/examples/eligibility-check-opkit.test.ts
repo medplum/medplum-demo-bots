@@ -73,6 +73,6 @@ test.skip('Success', async () => {
     status: 'active',
   };
 
-  const result = await handler(medplum, { input, contentType });
+  const result = await handler(medplum, { input, contentType, secrets: {} });
   expect(result).toBe(true);
 });
