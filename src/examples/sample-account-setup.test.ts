@@ -11,7 +11,7 @@ test('New patient', async () => {
     name: [{ given: ['John'], family: 'Doe' }],
   });
 
-  const event: BotEvent = { contentType: 'application/fhir+json', input: patient };
+  const event: BotEvent = { contentType: 'application/fhir+json', input: patient, secrets: {} };
   await handler(medplum, event);
 
   const check = await medplum.readResource('Patient', patient.id as string);

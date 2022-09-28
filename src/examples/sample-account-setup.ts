@@ -313,11 +313,9 @@ async function createCarePlan(medplum: MedplumClient, patient: Patient, tasks: T
     })
   );
 
-  const status = tasks[0]?.status;
-
   const requestGroup = await medplum.createResource<RequestGroup>({
     resourceType: 'RequestGroup',
-    status,
+    status: 'active',
     intent: 'order',
     subject: createReference(patient),
     action: tasks.map(
@@ -331,7 +329,7 @@ async function createCarePlan(medplum: MedplumClient, patient: Patient, tasks: T
 
   const carePlan: CarePlan = await medplum.createResource<CarePlan>({
     resourceType: 'CarePlan',
-    status,
+    status: 'active',
     intent: 'order',
     title: tasks[0].description,
     subject: createReference(patient),
