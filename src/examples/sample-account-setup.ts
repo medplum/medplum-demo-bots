@@ -1,8 +1,10 @@
 import { BotEvent, createReference, getReferenceString, MedplumClient } from '@medplum/core';
 import {
+  AllergyIntolerance,
   BundleEntry,
   CarePlan,
   Communication,
+  Condition,
   DiagnosticReport,
   Immunization,
   MedicationRequest,
@@ -25,6 +27,9 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     return;
   }
 
+  console.log('Creating questionnaire library...');
+  await ensureQuestionnaire(medplum);
+
   console.log('Setting practitioner...');
   const practitioner = await getPractitioner(medplum);
   patient.generalPractitioner = [createReference(practitioner)];
@@ -41,6 +46,8 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
   entries.push(createEntry(createDiagnosticReport(patient, a1c)));
   entries.push(createEntry(createActiveMedicationRequest(patient, practitioner)));
   entries.push(createEntry(createStoppedMedicationRequest(patient, practitioner)));
+  entries.push(createEntry(createAllergyIntolerance(patient, practitioner)));
+  entries.push(createEntry(createMedicalCondition(patient, practitioner)));
   entries.push(createEntry(createCompletedImmunization(patient)));
   entries.push(createEntry(createIncompleteImmunization(patient)));
 
@@ -66,6 +73,71 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     entry: entries,
   });
   console.log(result.entry?.map((entry) => entry.response?.status));
+}
+
+/**
+ * Returns a practitioner resource.
+ * Creates the practitioner if one does not already exist.
+ * @param medplum The medplum client.
+ * @returns The practitioner resource.
+ */
+async function ensureQuestionnaire(medplum: MedplumClient) {
+  const questionnaire = await medplum.searchOne('Questionnaire', 'title=Order Lab Tests');
+  if (questionnaire) {
+    return;
+  }
+  medplum.createResource({
+    resourceType: 'Questionnaire',
+    name: 'Lab Test Orders',
+    title: 'Order Lab Tests',
+    status: 'active',
+    item: [
+      {
+        id: 'id-4',
+        linkId: 'g2',
+        type: 'group',
+        text: 'For guidance on which labs to order visit: https://www.uptodate.com/contents/search?search=lab%20orders',
+      },
+      {
+        id: 'id-2',
+        linkId: 'panel',
+        type: 'choice',
+        text: 'What type of lab would you like to order?',
+        answerOption: [
+          {
+            id: 'id-3',
+            valueString: 'Metabolic Panel LOINC: 24323-8',
+          },
+          {
+            id: 'id-4',
+            valueString: 'Lipid Panel LOINC: 24331-1',
+          },
+          {
+            id: 'id-5',
+            valueString: 'CBC With Differential LOINC: 57021-8',
+          },
+        ],
+      },
+      {
+        id: 'id-6',
+        linkId: 'specimen',
+        type: 'choice',
+        text: 'What specimen type is required?',
+        answerOption: [
+          {
+            id: 'id-7',
+            valueString: 'Serum/Plasma',
+          },
+          {
+            id: 'id-8',
+            valueString: 'Whole blood',
+          },
+        ],
+      },
+    ],
+    subjectType: ['Patient'],
+  });
+  return;
 }
 
 /**
@@ -333,6 +405,17 @@ function createActiveMedicationRequest(patient: Patient, practitioner: Practitio
     medicationCodeableConcept: {
       text: 'Amoxicillin 500mg',
     },
+    supportingInformation: [
+      {
+        reference: 'https://www.nlm.nih.gov/medlineplus/druginfo/meds/a682053.html',
+      },
+      {
+        reference: 'https://www.drugs.com/amoxicillin.html',
+      },
+      {
+        reference: 'https://www.drugs.com/cons/amoxicillin.html',
+      },
+    ],
   };
 }
 
@@ -361,6 +444,98 @@ function createStoppedMedicationRequest(patient: Patient, practitioner: Practiti
     medicationCodeableConcept: {
       text: 'Biaxin XL (clarithromycin) 500mg',
     },
+  };
+}
+
+function createAllergyIntolerance(patient: Patient, practitioner: Practitioner): AllergyIntolerance {
+  return {
+    resourceType: 'AllergyIntolerance',
+    clinicalStatus: {
+      text: 'Active',
+      coding: [
+        {
+          system: 'http://hl7.org/fhir/ValueSet/allergyintolerance-clinical',
+          code: 'active',
+          display: 'Active',
+        },
+      ],
+    },
+    verificationStatus: {
+      text: 'Confirmed',
+      coding: [
+        {
+          system: 'http://hl7.org/fhir/ValueSet/allergyintolerance-verification',
+          code: 'confirmed',
+          display: 'Confirmed',
+        },
+      ],
+    },
+    type: 'allergy',
+    category: ['medication'],
+    criticality: 'high',
+    patient: createReference(patient),
+    code: {
+      text: 'penicillin',
+    },
+    note: [
+      {
+        text: 'Allergy decision support resource: https://www.uptodate.com/contents/search?search=penicillin%20allergy',
+        authorReference: createReference(practitioner),
+      },
+    ],
+  };
+}
+
+function createMedicalCondition(patient: Patient, practitioner: Practitioner): Condition {
+  return {
+    resourceType: 'Condition',
+    clinicalStatus: {
+      coding: [
+        {
+          system: 'http://terminology.hl7.org/CodeSystem/condition-clinical',
+          code: 'resolved',
+        },
+      ],
+    },
+    verificationStatus: {
+      coding: [
+        {
+          system: 'http://terminology.hl7.org/CodeSystem/condition-ver-status',
+          code: 'confirmed',
+        },
+      ],
+    },
+    category: [
+      {
+        coding: [
+          {
+            system: 'http://terminology.hl7.org/CodeSystem/condition-category',
+            code: 'encounter-diagnosis',
+            display: 'Encounter Diagnosis',
+          },
+        ],
+      },
+    ],
+    code: {
+      coding: [
+        {
+          system: 'http://snomed.info/sct',
+          code: '192127007',
+          display: 'Child attention deficit disorder',
+        },
+      ],
+      text: 'Child attention deficit disorder',
+    },
+    subject: createReference(patient),
+    note: [
+      {
+        text: 'Medical Condition Clinical Decision Support: https://www.uptodate.com/contents/search?search=adhd',
+        authorReference: createReference(practitioner),
+      },
+    ],
+    onsetDateTime: '2016-01-29T14:05:06-08:00',
+    abatementDateTime: '2016-05-11T18:05:06-07:00',
+    recordedDate: '2016-01-29T14:05:06-08:00',
   };
 }
 
