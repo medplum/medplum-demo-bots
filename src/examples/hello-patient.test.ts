@@ -1,6 +1,6 @@
 import { MockClient } from '@medplum/mock';
 import { expect, test } from 'vitest';
-import { handler } from './hello-world';
+import { handler } from './hello-patient';
 
 const medplum = new MockClient();
 
