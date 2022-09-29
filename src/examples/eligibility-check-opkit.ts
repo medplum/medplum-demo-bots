@@ -10,10 +10,11 @@ import {
 } from '@medplum/fhirtypes';
 import fetch from 'node-fetch';
 
-const OPKIT_KEY = '<opkit-public-api-key>';
-
 export async function handler(medplum: MedplumClient, event: BotEvent): Promise<any> {
   // Because this bot is triggered by a subscription, the resource that comes in is a Coverage object
+
+  const OPKIT_KEY = event.secrets['OPKIT_API_KEY'];
+
   const coverage = event.input as Coverage;
   const patient = await medplum.readReference(coverage.subscriber as Reference<Patient>);
   const organization: Organization = await medplum.readReference(coverage.payor?.[0] as Reference<Organization>);
