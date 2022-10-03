@@ -9,7 +9,7 @@ Bots make heavy use of the [Medplum JS Client Library](https://docs.medplum.com/
 To set up your bot deployment you will need to do the following:
 
 * [Create a Bot](https://app.medplum.com/admin/project) on Medplum and note its `id`. (All Bots in your account can be found [here](https://app.medplum.com/Bot))
-* Create a new typescript file (e.g. `my-bot.ts`) and copy the contents of `hello-world.ts` into your new file.
+* Create a new typescript file (e.g. `my-bot.ts`) and copy the contents of `examples/hello-patient.ts` into your new file.
 * With the `id` of the Bot `id` in hand, add a section to `medplum.config.json` like so
 
 ```json
