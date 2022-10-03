@@ -1,40 +1,40 @@
 {
   "bots": [
     {
-      "name": "hello-world",
+      "name": "hello-patient",
       "id": "488fe72d-b5cf-4a8a-81df-908647c19e02",
-      "source": "src/examples/hello-world.ts",
-      "dist": "dist/hello-world.js"
+      "source": "src/examples/hello-patient.ts",
+      "dist": "dist/examples/hello-patient.js"
     },
     {
       "name": "patient-intake",
       "id": "add1bd8d-0901-46a3-87ec-222ef88abccd",
       "source": "src/examples/patient-intake.ts",
-      "dist": "dist/patient-intake.js"
+      "dist": "dist/examples/patient-intake.js"
     },
     {
       "name": "create-pdf",
       "id": "daae7b6b-3481-4a60-a4b1-31f8fbff4468",
       "source": "src/examples/create-pdf.ts",
-      "dist": "dist/create-pdf.js"
+      "dist": "dist/examples/create-pdf.js"
     },
     {
       "name": "sample-account-setup",
       "id": "aa3a0383-a97b-4172-b65d-430f6241646f",
       "source": "src/examples/sample-account-setup.ts",
-      "dist": "dist/sample-account-setup.js"
+      "dist": "dist/examples/sample-account-setup.js"
     },
     {
       "name": "sample-account-staging",
       "id": "4b11b133-b181-4858-a7b0-75dd9d4f2e88",
       "source": "src/examples/sample-account-setup.ts",
-      "dist": "dist/sample-account-setup.js"
+      "dist": "dist/examples/sample-account-setup.js"
     },
     {
       "name": "hl7-bot",
       "id": "9d7f8605-e3e0-48bf-a286-dee877a80433",
       "source": "src/examples/hl7-bot.ts",
-      "dist": "dist/hl7-bot.js"
+      "dist": "dist/examples/hl7-bot.js"
     }
   ]
 }
