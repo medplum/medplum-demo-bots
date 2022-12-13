@@ -1,8 +1,8 @@
-import { BotEvent, MedplumClient } from '@medplum/core';
-import fetch from 'node-fetch';
+import { MedplumClient } from '@medplum/core';
 import FormData from 'form-data';
+import fetch from 'node-fetch';
 
-export async function handler(medplum: MedplumClient, event: BotEvent): Promise<any> {
+export async function handler(medplum: MedplumClient): Promise<any> {
   // Create the PDF
   const binary = await medplum.createPdf({
     content: ['Hello Medplum'],

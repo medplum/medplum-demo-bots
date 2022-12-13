@@ -42,7 +42,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     return true;
   }
 
-  var coverageEligibilityReq: CoverageEligibilityRequest = await medplum.createResource({
+  let coverageEligibilityReq: CoverageEligibilityRequest = await medplum.createResource({
     resourceType: 'CoverageEligibilityRequest',
     provider: createReference(provider),
     patient: createReference(patient),
@@ -82,7 +82,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     },
   })
     .then((response) => response.json())
-    .catch((error) => console.log('Error checking eligibility request'));
+    .catch(() => console.log('Error checking eligibility request'));
 
   if (!result || !result?.plan?.benefits) {
     return false;
@@ -118,7 +118,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
 
   const allowableBenefitTypes: string[] = ['deductible', 'copay'];
 
-  const generateBenefits = (benefits: any, service: any, network: any, coverage: any) => {
+  const generateBenefits = (benefits: any, service: any, network: any, coverage: any): any => {
     const fhirBenefits: any = [];
 
     const filteredBenefits = benefits.filter(
@@ -128,7 +128,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     filteredBenefits.forEach((benefit: any) => {
       if (benefit.period === 'remaining' || !typeToBenefitTypeMap[benefit.type]) {
         // Skip in these states
-      } else if (benefit.period === 'service_year' || 'calendar_year') {
+      } else if (['service_year', 'calendar_year'].includes(benefit.period)) {
         const usedMoney = benefits.find((value: any) => {
           return (
             value.service === service &&
@@ -187,7 +187,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     return fhirBenefits.length > 0 ? fhirBenefits : undefined;
   };
 
-  const checkPlanStatus = (benefits: any) => {
+  const checkPlanStatus = (benefits: any): boolean => {
     const activeStatusBenefit = benefits.find(
       (benefit: any) => benefit.type === 'active_coverage' && benefit.service === 'health_benefit_plan_coverage'
     );
@@ -197,7 +197,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
 
   const isPlanActive = checkPlanStatus(result.plan.benefits);
 
-  const generateItem = (opkitResponse: any) => {
+  const generateItem = (opkitResponse: any): any => {
     const item: any = [];
     const benefits = opkitResponse.plan.benefits;
     const filteredBenefits = benefits.filter((value: any) => {

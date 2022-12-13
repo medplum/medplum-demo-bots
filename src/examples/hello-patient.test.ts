@@ -4,9 +4,10 @@ import { handler } from './hello-patient';
 
 const medplum = new MockClient();
 
-test('Hello world', () => {
+test('Hello world', async () => {
   const input = 'Hello';
   const contentType = 'text/plain';
   const secrets = {};
-  expect(handler(medplum, { input, contentType, secrets })).resolves.toBe(true);
+  const result = await handler(medplum, { input, contentType, secrets });
+  expect(result).toBe(true);
 });
