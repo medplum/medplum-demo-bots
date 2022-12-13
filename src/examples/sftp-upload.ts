@@ -1,4 +1,3 @@
-import { BotEvent, MedplumClient } from '@medplum/core';
 import Client from 'ssh2-sftp-client';
 
 /**
@@ -8,7 +7,7 @@ import Client from 'ssh2-sftp-client';
  * @param event - The BotEvent object (unused)
  * @returns - The data returned by the `list` command
  */
-export async function handler(medplum: MedplumClient, event: BotEvent): Promise<any> {
+export async function handler(): Promise<any> {
   console.log('SFTP test');
   let data: any | undefined = undefined;
   try {

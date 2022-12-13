@@ -81,12 +81,12 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
  * @param medplum The medplum client.
  * @returns The practitioner resource.
  */
-async function ensureQuestionnaire(medplum: MedplumClient) {
+async function ensureQuestionnaire(medplum: MedplumClient): Promise<void> {
   const questionnaire = await medplum.searchOne('Questionnaire', 'title=Order Lab Tests');
   if (questionnaire) {
     return;
   }
-  medplum.createResource({
+  await medplum.createResource({
     resourceType: 'Questionnaire',
     name: 'Lab Test Orders',
     title: 'Order Lab Tests',
@@ -137,7 +137,6 @@ async function ensureQuestionnaire(medplum: MedplumClient) {
     ],
     subjectType: ['Patient'],
   });
-  return;
 }
 
 /**
@@ -239,7 +238,7 @@ async function ensureSlots(medplum: MedplumClient, schedule: Schedule, slotDate:
  * @param medplum The medplum client
  * @param patient The patient.
  */
-async function createCompletedCarePlan(medplum: MedplumClient, patient: Patient) {
+async function createCompletedCarePlan(medplum: MedplumClient, patient: Patient): Promise<void> {
   const tasks: Task[] = [
     {
       resourceType: 'Task',
@@ -271,14 +270,14 @@ async function createCompletedCarePlan(medplum: MedplumClient, patient: Patient)
     },
   ];
 
-  createCarePlan(medplum, patient, tasks);
+  await createCarePlan(medplum, patient, tasks);
 }
 
 /**
  * Creates an active CarePlan that starts today.
  * @param patient The patient.
  */
-async function createActiveCarePlan(medplum: MedplumClient, patient: Patient) {
+async function createActiveCarePlan(medplum: MedplumClient, patient: Patient): Promise<void> {
   const tasks: Task[] = [
     {
       resourceType: 'Task',
@@ -296,7 +295,7 @@ async function createActiveCarePlan(medplum: MedplumClient, patient: Patient) {
       },
     },
   ];
-  createCarePlan(medplum, patient, tasks);
+  await createCarePlan(medplum, patient, tasks);
 }
 
 /**
