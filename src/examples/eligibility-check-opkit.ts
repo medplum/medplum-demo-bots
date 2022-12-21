@@ -10,6 +10,11 @@ import {
 } from '@medplum/fhirtypes';
 import fetch from 'node-fetch';
 
+/**
+ * This bot sends patient coverage data from Medplum to the Opkit eligibility API (https://www.opkit.co/) to
+ * verify a patient's benefits
+ */
+
 export async function handler(medplum: MedplumClient, event: BotEvent): Promise<any> {
   // Because this bot is triggered by a subscription, the resource that comes in is a Coverage object
 
