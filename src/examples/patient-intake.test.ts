@@ -1,6 +1,5 @@
 import { QuestionnaireResponse } from '@medplum/fhirtypes';
 import { MockClient } from '@medplum/mock';
-import { expect, test, vi } from 'vitest';
 import { handler } from './patient-intake';
 
 const contentType = 'application/fhir+json';
@@ -21,7 +20,7 @@ test('Success', async () => {
 
 test('Missing first name', async () => {
   const medplum = new MockClient();
-  console.log = vi.fn();
+  console.log = jest.fn();
   const input: QuestionnaireResponse = {
     resourceType: 'QuestionnaireResponse',
     item: [
@@ -36,7 +35,7 @@ test('Missing first name', async () => {
 
 test('Missing last name', async () => {
   const medplum = new MockClient();
-  console.log = vi.fn();
+  console.log = jest.fn();
   const input: QuestionnaireResponse = {
     resourceType: 'QuestionnaireResponse',
     item: [

@@ -1,7 +1,7 @@
 import { BotEvent, getReferenceString } from '@medplum/core';
+
 import { Patient } from '@medplum/fhirtypes';
 import { MockClient } from '@medplum/mock';
-import { expect } from 'vitest';
 import { handler } from './sample-account-setup';
 
 test('New patient', async () => {

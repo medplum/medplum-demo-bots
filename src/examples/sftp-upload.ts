@@ -10,8 +10,8 @@ import Client from 'ssh2-sftp-client';
 export async function handler(): Promise<any> {
   console.log('SFTP test');
   let data: any | undefined = undefined;
+  const sftp = new Client();
   try {
-    const sftp = new Client();
     await sftp.connect({
       host: 'test.rebex.net',
       username: 'demo',
@@ -22,6 +22,10 @@ export async function handler(): Promise<any> {
   } catch (err) {
     console.log('error', err);
     return false;
+  } finally {
+    if (sftp) {
+      await sftp.end();
+    }
   }
   return data;
 }
