@@ -57,6 +57,10 @@ test('Success', async () => {
   expect(checkReport.status).toBe('final');
 
   // Read all the Observations referenced by the modified report
-  // for (const observationRef of checkReport.result) {
-  // }
+  if (checkReport.result) {
+    for (const observationRef of checkReport.result) {
+      const checkObservation = await medplum.readReference(observationRef);
+      expect(checkObservation.status).toBe('final');
+    }
+  }
 });
