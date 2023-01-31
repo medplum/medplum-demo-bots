@@ -1,5 +1,4 @@
 import { MockClient } from '@medplum/mock';
-import { expect, test } from 'vitest';
 import { handler } from './form-data-upload';
 
 const medplum = new MockClient();
