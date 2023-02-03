@@ -17,7 +17,7 @@
     "@babel/preset-typescript": "^7.18.6",
     "@medplum/cli": "2.0.0",
     "@medplum/core": "2.0.0",
-    "@medplum/definitions": "^2.0.0",
+    "@medplum/definitions": "^2.0.1",
     "@medplum/fhirtypes": "2.0.0",
     "@medplum/mock": "2.0.0",
     "@types/jest": "^29.4.0",
