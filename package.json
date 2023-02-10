@@ -19,7 +19,7 @@
     "@medplum/core": "2.0.0",
     "@medplum/definitions": "^2.0.0",
     "@medplum/fhirtypes": "2.0.0",
-    "@medplum/mock": "2.0.0",
+    "@medplum/mock": "2.0.2",
     "@types/jest": "^29.4.0",
     "@types/node": "18.7.6",
     "@types/node-fetch": "^2.6.2",
