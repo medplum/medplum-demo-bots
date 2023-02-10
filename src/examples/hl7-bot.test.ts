@@ -1,5 +1,6 @@
 import { Hl7Message } from '@medplum/core';
 import { MockClient } from '@medplum/mock';
+import { expect, test } from 'vitest';
 import { handler } from './hl7-bot';
 
 const medplum = new MockClient();

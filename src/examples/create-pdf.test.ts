@@ -1,4 +1,5 @@
 import { MockClient } from '@medplum/mock';
+import { expect, test } from 'vitest';
 import { handler } from './create-pdf';
 
 const medplum = new MockClient();

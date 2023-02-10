@@ -1,6 +1,7 @@
 import { createReference } from '@medplum/core';
 import { Coverage, Organization, Patient, Practitioner } from '@medplum/fhirtypes';
 import { MockClient } from '@medplum/mock';
+import { expect, test } from 'vitest';
 import { handler } from './eligibility-check-opkit';
 
 const contentType = 'application/fhir+json';
