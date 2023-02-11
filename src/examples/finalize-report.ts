@@ -8,14 +8,18 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     throw new Error('Unexpected input. Expected DiagnosticReport');
   }
 
-  report.status = 'final';
-  await medplum.updateResource(report);
+  if (report.status !== 'final') {
+    report.status = 'final';
+    await medplum.updateResource(report);
+  }
 
   if (report.result) {
     for (const observationRef of report.result) {
       const observation = await medplum.readReference(observationRef);
-      observation.status = 'final';
-      await medplum.updateResource(observation);
+      if (observation.status !== 'final') {
+        observation.status = 'final';
+        await medplum.updateResource(observation);
+      }
     }
   }
 }
