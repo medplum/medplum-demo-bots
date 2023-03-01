@@ -14,7 +14,7 @@
   "author": "Medplum <hello@medplum.com>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@medplum/cli": "2.0.2",
+    "@medplum/cli": "2.0.5",
     "@medplum/core": "2.0.2",
     "@medplum/fhirtypes": "2.0.2",
     "@medplum/mock": "2.0.2",
