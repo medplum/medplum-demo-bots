@@ -16,7 +16,7 @@
   "devDependencies": {
     "@medplum/cli": "2.0.2",
     "@medplum/core": "2.0.2",
-    "@medplum/fhirtypes": "2.0.2",
+    "@medplum/fhirtypes": "2.0.5",
     "@medplum/mock": "2.0.2",
     "@types/node": "18.7.6",
     "@types/node-fetch": "^2.6.2",
