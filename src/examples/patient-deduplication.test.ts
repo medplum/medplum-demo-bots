@@ -2,10 +2,12 @@ import { Patient } from '@medplum/fhirtypes';
 import { MockClient } from '@medplum/mock';
 import { handler } from './patient-deduplication';
 
+// npm t src/examples/patient-deduplication.test.ts
+// This test demostrates a automatically linking patients with three matching identifiers
 describe('Link Patient', async () => {
   test('Success', async () => {
     const medplum = new MockClient();
-    //Create an original Patient
+    // Create an original Patient with several identifiers
     const patient1: Patient = await medplum.createResource({
       resourceType: 'Patient',
       identifier: [
@@ -47,8 +49,10 @@ describe('Link Patient', async () => {
       ],
     });
 
-    medplum.createResource(patient1);
+    const existingPatient = await medplum.search('Patient', 'identifier=999-47-5984');
+    console.log('Existing' + JSON.stringify(existingPatient, null, 2));
 
+    // Create a new Patient with a matching single identifier
     const patient2: Patient = await medplum.createResource({
       resourceType: 'Patient',
       identifier: [
@@ -76,20 +80,18 @@ describe('Link Patient', async () => {
       ],
     });
 
-    medplum.createResource(patient2);
-
     const contentType = 'application/fhir+json';
 
     await handler(medplum, { input: patient2, contentType, secrets: {} });
 
     const mergedPatient = await medplum.readResource('Patient', patient1.id as string);
-    console.log(JSON.stringify(mergedPatient));
-    //expect(mergedPatient.link?.[0].type).toBe('replaces');
+    expect(mergedPatient.link?.[0].type).toBe('replaces');
   });
 
+  // This test demonstrates flagging a patient if it is created with an identifier that matches an existing patient
   test('Warning', async () => {
     const medplum = new MockClient();
-    //Create an original Patient
+    // Create an original Patient
     const patient1: Patient = await medplum.createResource({
       resourceType: 'Patient',
       identifier: [
@@ -133,7 +135,7 @@ describe('Link Patient', async () => {
 
     medplum.createResource(patient1);
 
-    //Create the data
+    // Create another patient with the same identifier but different name
     const patient2: Patient = await medplum.createResource({
       resourceType: 'Patient',
       identifier: [
@@ -163,8 +165,8 @@ describe('Link Patient', async () => {
     const contentType = 'application/fhir+json';
     await handler(medplum, { input: patient2, contentType, secrets: {} });
 
-    console.log(JSON.stringify(patient2));
-    //expect(patient2.active).toBe(true);
-    console.log(patient2.active);
+    const updatedPatient = await medplum.readResource('Patient', patient2.id as string);
+
+    expect(updatedPatient.active).toBe(true);
   });
 });

@@ -1,4 +1,4 @@
-import { BotEvent, getDisplayString, getReferenceString, MedplumClient } from '@medplum/core';
+import { BotEvent, createReference, MedplumClient } from '@medplum/core';
 import { Patient } from '@medplum/fhirtypes';
 
 export async function handler(medplum: MedplumClient, event: BotEvent): Promise<any> {
@@ -9,10 +9,14 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
   }
 
   const identifier = patient.identifier?.[0].value?.toString();
+  console.log('Checking for duplicate identifiers: ' + identifier);
 
   const existingPatient = await medplum.searchOne('Patient', 'identifier=' + identifier);
 
+  console.log(JSON.stringify(existingPatient, null, 2));
+
   if (existingPatient) {
+    console.log('Found existing patient: ' + existingPatient.id);
     const firstName = patient.name?.[0].given?.[0].toString();
     const lastName = patient.name?.[0].family?.toString();
     const birthDate = patient.birthDate?.toString();
@@ -25,25 +29,23 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
       existingPatient.link = [
         {
           type: 'replaces',
-          other: {
-            reference: getReferenceString(patient),
-            display: getDisplayString(patient),
-          },
+          other: createReference(patient),
         },
       ];
 
-      //Save the linkage to the existing patient
-      medplum.updateResource(existingPatient);
+      // Save the linkage to the existing patient
+      console.log('Linking ' + patient.id + ' to ' + existingPatient.id);
+      await medplum.updateResource(existingPatient);
 
-      //Mark the new patient as inactive
+      // Mark the new patient as inactive
       patient.active = false;
-      medplum.updateResource(patient);
+      await medplum.updateResource(patient);
     } else {
       // This case is only an identifier collision, so this should be handled manually
       console.log('Warning: Potential duplicate identifiers found, alert operator.');
       // Mark the new patient as active to ensure it is not deleted or merged accidentally
       patient.active = true;
-      medplum.updateResource(patient);
+      await medplum.updateResource(patient);
     }
   }
   return true;
