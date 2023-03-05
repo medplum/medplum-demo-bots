@@ -1,10 +1,19 @@
-import { Patient } from '@medplum/fhirtypes';
+import { indexSearchParameterBundle, indexStructureDefinitionBundle } from '@medplum/core';
+import { readJson } from '@medplum/definitions';
+import { Bundle, Patient, SearchParameter } from '@medplum/fhirtypes';
 import { MockClient } from '@medplum/mock';
 import { handler } from './patient-deduplication';
 
 // npm t src/examples/patient-deduplication.test.ts
 // This test demostrates a automatically linking patients with three matching identifiers
 describe('Link Patient', async () => {
+  // Load the FHIR definitions to enable search parameter indexing
+  beforeAll(() => {
+    indexStructureDefinitionBundle(readJson('fhir/r4/profiles-types.json') as Bundle);
+    indexStructureDefinitionBundle(readJson('fhir/r4/profiles-resources.json') as Bundle);
+    indexSearchParameterBundle(readJson('fhir/r4/search-parameters.json') as Bundle<SearchParameter>);
+  });
+
   test('Success', async () => {
     const medplum = new MockClient();
     // Create an original Patient with several identifiers
@@ -48,9 +57,6 @@ describe('Link Patient', async () => {
         },
       ],
     });
-
-    const existingPatient = await medplum.search('Patient', 'identifier=999-47-5984');
-    console.log('Existing' + JSON.stringify(existingPatient, null, 2));
 
     // Create a new Patient with a matching single identifier
     const patient2: Patient = await medplum.createResource({

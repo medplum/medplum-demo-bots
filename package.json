@@ -40,7 +40,7 @@
     "root": true,
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
-      "project": "./tsconfig.base.json"
+      "project": "./tsconfig.json"
     },
     "plugins": [
       "@typescript-eslint"
@@ -48,8 +48,7 @@
     "extends": [
       "eslint:recommended",
       "plugin:@typescript-eslint/recommended",
-      "plugin:prettier/recommended",
-      "plugin:react-hooks/recommended"
+      "plugin:prettier/recommended"
     ],
     "rules": {
       "@typescript-eslint/explicit-function-return-type": [

@@ -9,14 +9,10 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
   }
 
   const identifier = patient.identifier?.[0].value?.toString();
-  console.log('Checking for duplicate identifiers: ' + identifier);
 
   const existingPatient = await medplum.searchOne('Patient', 'identifier=' + identifier);
 
-  console.log(JSON.stringify(existingPatient, null, 2));
-
   if (existingPatient) {
-    console.log('Found existing patient: ' + existingPatient.id);
     const firstName = patient.name?.[0].given?.[0].toString();
     const lastName = patient.name?.[0].family?.toString();
     const birthDate = patient.birthDate?.toString();
@@ -34,7 +30,6 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
       ];
 
       // Save the linkage to the existing patient
-      console.log('Linking ' + patient.id + ' to ' + existingPatient.id);
       await medplum.updateResource(existingPatient);
 
       // Mark the new patient as inactive
