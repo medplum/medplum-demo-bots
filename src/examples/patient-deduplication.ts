@@ -10,7 +10,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
 
   const identifier = patient.identifier?.[0].value?.toString();
 
-  const existingPatient = await medplum.searchOne('Patient', 'identifier=' + identifier);
+  const existingPatient = await medplum.searchOne('Patient', 'identifier=' + identifier + '&_id:not=' + patient.id);
 
   if (existingPatient) {
     const firstName = patient.name?.[0].given?.[0].toString();
