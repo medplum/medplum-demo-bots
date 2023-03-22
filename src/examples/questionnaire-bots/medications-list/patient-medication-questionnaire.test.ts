@@ -14,7 +14,6 @@ test('Success', async () => {
     title: 'A Questionnaire for Patients to fill out pre-visit',
     status: 'active',
     subjectType: ['Patient'],
-    id: '59d79d47-8e50-4202-80ca-4f8300b4f400',
     item: [
       {
         linkId: 'medications',
@@ -130,13 +129,9 @@ test('Success', async () => {
     ],
     questionnaire: createReference(questionnaire).reference,
     subject: createReference(HomerSimpson),
-    source: {
-      reference: createReference(DrAliceSmith).reference,
-      display: 'Alice Smith',
-    },
+    source: createReference(DrAliceSmith),
     authored: '2023-03-19T18:07:45.750Z',
     status: 'completed',
-    id: 'c0c77ac2-44bb-4b94-b045-bb7ea54560a6',
   };
   const result = await handler(medplum, { input, contentType, secrets: {} });
   expect(result).toBe(true);

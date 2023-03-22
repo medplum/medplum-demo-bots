@@ -1,4 +1,4 @@
-import { createReference, formatDateTime, getReferenceString } from '@medplum/core';
+import { createReference, getReferenceString } from '@medplum/core';
 import { Questionnaire, QuestionnaireResponse } from '@medplum/fhirtypes';
 import { DrAliceSmith, HomerSimpson, MockClient } from '@medplum/mock';
 import { expect, test } from 'vitest';
@@ -14,7 +14,6 @@ test('Success', async () => {
     title: 'A Questionnaire for collecting a list of conditions or problems',
     status: 'active',
     subjectType: ['Patient'],
-    id: '59d79d47-8e50-4202-80ca-4f8300b4f400',
     item: [
       {
         linkId: 'conditions',
@@ -106,9 +105,8 @@ test('Success', async () => {
     subject: createReference(HomerSimpson),
     encounter: createReference(encounter),
     source: createReference(DrAliceSmith),
-    authored: formatDateTime(new Date().toDateString()),
+    authored: new Date().toISOString(),
     status: 'completed',
-    id: 'c0c77ac2-44bb-4b94-b045-bb7ea54560a6',
   };
   const result = await handler(medplum, { input, contentType, secrets: {} });
   expect(result).toBe(true);
