@@ -1,0 +1,143 @@
+import { createReference } from '@medplum/core';
+import { Questionnaire, QuestionnaireResponse } from '@medplum/fhirtypes';
+import { DrAliceSmith, HomerSimpson, MockClient } from '@medplum/mock';
+import { expect, test } from 'vitest';
+import { handler } from './patient-medication-questionnaire';
+
+const contentType = 'application/fhir+json';
+// npm t src/examples/questionnaire-bots/medications-list/patient-medication-questionnaire.test.ts
+test('Success', async () => {
+  const medplum = new MockClient();
+  const quesionnaire: Questionnaire = {
+    resourceType: 'Questionnaire',
+    name: 'Common Medications Questionnaire',
+    title: 'A Questionnaire for Patients to fill out pre-visit',
+    status: 'active',
+    subjectType: ['Patient'],
+    id: '59d79d47-8e50-4202-80ca-4f8300b4f400',
+    item: [
+      {
+        linkId: 'medications',
+        text: 'Please indicate whether you are currently taking any of the following common medications:',
+        type: 'group',
+        item: [
+          {
+            linkId: '161',
+            text: 'Acetaminophen (Tylenol)',
+            type: 'boolean',
+            code: [
+              {
+                system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
+                code: '161',
+                display: 'Acetaminophen',
+              },
+            ],
+          },
+          {
+            linkId: '1191',
+            text: 'Aspirin',
+            type: 'boolean',
+            code: [
+              {
+                system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
+                code: '1191',
+                display: 'Aspirin',
+              },
+            ],
+          },
+          {
+            linkId: '81906',
+            text: 'Atorvastatin (Lipitor)',
+            type: 'boolean',
+            code: [
+              {
+                system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
+                code: '81906',
+                display: 'Atorvastatin',
+              },
+            ],
+          },
+          {
+            linkId: '860258',
+            text: 'Metformin (Glucophage)',
+            type: 'boolean',
+            code: [
+              {
+                system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
+                code: '860258',
+                display: 'Metformin',
+              },
+            ],
+          },
+          {
+            linkId: '103258',
+            text: 'Lisinopril (Zestril)',
+            type: 'boolean',
+            code: [
+              {
+                system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
+                code: '103258',
+                display: 'Lisinopril',
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+
+  const questionnaire = await medplum.createResource(quesionnaire);
+
+  const input: QuestionnaireResponse = {
+    resourceType: 'QuestionnaireResponse',
+    item: [
+      {
+        linkId: 'medications',
+        text: 'Please indicate whether you are currently taking any of the following common medications:',
+        item: [
+          {
+            linkId: '161',
+            text: 'Acetaminophen (Tylenol)',
+            answer: [
+              {
+                valueBoolean: true,
+              },
+            ],
+          },
+          {
+            linkId: '1191',
+            text: 'Aspirin',
+          },
+          {
+            linkId: 'lipitor',
+            text: 'Atorvastatin (Lipitor)',
+            answer: [
+              {
+                valueBoolean: true,
+              },
+            ],
+          },
+          {
+            linkId: 'metformin',
+            text: 'Metformin (Glucophage)',
+          },
+          {
+            linkId: 'lisinopril',
+            text: 'Lisinopril (Zestril)',
+          },
+        ],
+      },
+    ],
+    questionnaire: createReference(questionnaire).reference,
+    subject: createReference(HomerSimpson),
+    source: {
+      reference: createReference(DrAliceSmith).reference,
+      display: 'Alice Smith',
+    },
+    authored: '2023-03-19T18:07:45.750Z',
+    status: 'completed',
+    id: 'c0c77ac2-44bb-4b94-b045-bb7ea54560a6',
+  };
+  const result = await handler(medplum, { input, contentType, secrets: {} });
+  expect(result).toBe(true);
+});
