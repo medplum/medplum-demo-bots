@@ -1,29 +1,26 @@
-# Medplum Demo Bots
+# CDC Medpmorph
 
-This repo contains code for [Medplum Bots](https://docs.medplum.com/app/bots). Bots power many of the integrations you see in Medplum apps.  You can view your deployed bots online on the [Medplum App](https://app.medplum.com).
-
-Bots make heavy use of the [Medplum JS Client Library](https://docs.medplum.com/typedoc/core/index.html).
+This repository shows reference material related to CDC Electronic Case Reporting (eCR) for cancer registry. The reference material uses [Medplum Bots](https://www.medplum.com/docs/bots/bot-basics) to synchronize the FHIR resource bundles to the registry.
 
 ## Setup
 
 To set up your bot deployment you will need to do the following:
 
-* [Create a Bot](https://app.medplum.com/admin/project) on Medplum and note its `id`. (All Bots in your account can be found [here](https://app.medplum.com/Bot))
-* Create a new typescript file (e.g. `my-bot.ts`) and copy the contents of `examples/hello-patient.ts` into your new file.
-* With the `id` of the Bot `id` in hand, add a section to `medplum.config.json` like so
+- [Create a Bot](https://app.medplum.com/admin/project) on Medplum, call it `medmorph-bot` and note its `id`. (All Bots in your account can be found [here](https://app.medplum.com/Bot))
+- With the `id` of the Bot `id` in hand, add a section to `medplum.config.json` like so
 
 ```json
-    {
-      "name": "sample-account-setup",
-      "id": "aa3a0383-a97b-4172-b65d-430f6241646f",
-      "source": "src/examples/sample-account-setup.ts",
-      "dist": "dist/sample-account-setup.js"
-    }
+{
+  "name": "medmorph-bot",
+  "id": "aa3a0383-a97b-4172-b65d-430f6241646f",
+  "source": "src/examples/medmorph-bot.ts",
+  "dist": "dist/medmorph-bot.js"
+}
 ```
 
-* [Create an ClientApplication](https://app.medplum.com/ClientApplication/new) on Medplum. (All ClientApplications in your account can be found [here](https://app.medplum.com/ClientApplication))
-* Create a .env file locally by copying `.env.example` and put the `ClientId` and `ClientSecret` from the `ClientApplication` into the file.
-* (Optional) Create an [AccessPolicy]((https://app.medplum.com/AccessPolicy)) on Medplum that can only read/write Bots and add it to the Bot in the [admin panel](https://app.medplum.com/admin/project).
+- [Create an ClientApplication](https://app.medplum.com/ClientApplication/new) on Medplum. (All ClientApplications in your account can be found [here](https://app.medplum.com/ClientApplication))
+- Create a .env file locally by copying `.env.example` and put the `ClientId` and `ClientSecret` from the `ClientApplication` into the file.
+- (Optional) Create an [AccessPolicy](https://app.medplum.com/AccessPolicy) on Medplum that can only read/write Bots and add it to the Bot in the [admin panel](https://app.medplum.com/admin/project).
 
 ## Installation
 
@@ -47,10 +44,10 @@ Test:
 npm t
 ```
 
-Deploy one bot:
+Deploy medmorph bot:
 
 ```bash
-npx medplum deploy-bot sample-account-setup
+npx medplum deploy-bot medmorph-bot
 ```
 
 You will see the following in your command prompt if all goes well:
@@ -61,3 +58,18 @@ Success! New bot version: 7fcbc375-4192-471c-b874-b3f0d4676226
 Deploying bot...
 Deploy result: All OK
 ```
+
+## Setting up your Subscription
+
+Once your bot is in place, you'll want to set up a subscription so that each new FHIR Bundle that is created gets validated and sent to the correct system. Create a [Subscription](https://app.medplum.com/Subscription/new) in the Medplum app and name it `medmorph-bundle`.
+
+TODO: Complete this section
+
+## Importing Bundles
+
+## Sending Data to the Registry
+
+## Related Reading
+
+- [MedMorph Data Flow](https://build.fhir.org/ig/HL7/fhir-medmorph/usecases.html#interactions-between-medmorph-actors-and-systems) Diagram, this repo represents the Data Health Exchange App
+- [MedMorph Specification Bundle](https://build.fhir.org/ig/HL7/fhir-medmorph/StructureDefinition-us-ph-specification-bundle.html)
