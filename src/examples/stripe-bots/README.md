@@ -10,7 +10,7 @@ At a high level, the integration has the following components:
 
 ## Medplum Setup
 
-1. Create your [Medplum Access Policy](https://www.medplum.com/docs/auth/access-control#resource-type), you'll want to include two resource types `Invoice` and `Account`.
+1. Create your [Medplum Access Policy](https://www.medplum.com/docs/auth/access-control#resource-type), you'll want to include only two resource types `Invoice` and `Account`.
 2. Create a [ClientApplication](https://www.medplum.com/docs/auth/client-credentials) and apply the access policy from above
 3. Create your [Bot](https://www.medplum.com/docs/bots/bot-basics) and deploy the code using the sample in this repository as a base
 
@@ -23,7 +23,7 @@ At a high level, the integration has the following components:
 https://<client-application-id>:<client-secret>@api.medplum.com/fhir/R4/Bot/<bot-id>/$execute
 ```
 
-3. Subscribe to all invoice related events
+3. Subscribe to all invoice related events. A [list of event types](https://stripe.com/docs/api/events/types#event_types-invoice.created) is published by Stripe.
 
 Once this endpoint is live, your bot will execute when those webhook events are triggered. You will start seeing [Invoice](https://app.medplum.com/Invoice) resources in your Medplum account.
 

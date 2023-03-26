@@ -6,7 +6,7 @@ const medplum = new MockClient();
 // npm t src/examples/stripe-bots/stripe-create-invoice.test.ts
 
 test('Create PDF', async () => {
-  // This input is a Stripe Event object https://stripe.com/docs/webhooks/stripe-events
+  // This input is a Stripe Event object from https://stripe.com/docs/webhooks/stripe-events
   const input = {
     object: {
       id: 'in_1KnN0G589O8KAxCGfVSpD0Pj',

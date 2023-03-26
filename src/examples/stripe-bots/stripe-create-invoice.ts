@@ -1,32 +1,33 @@
 import { BotEvent, createReference, MedplumClient } from '@medplum/core';
-import { Account, Invoice } from '@medplum/fhirtypes';
+import { Account, Invoice, InvoiceLineItem } from '@medplum/fhirtypes';
+import type Stripe from 'stripe';
 
 export async function handler(medplum: MedplumClient, event: BotEvent<Record<string, any>>): Promise<any> {
-  const input = event.input;
-  const id = input['object']['id'];
+  const input = event.input as Stripe.Event.Data;
 
-  if (!id) {
-    console.log('No obhect id found');
-    return false;
-  }
-
-  const objectType = input['object']['object'];
-
-  if (objectType != 'invoice') {
+  const stripeInvoice = input.object as Stripe.Invoice | undefined;
+  if (stripeInvoice?.object !== 'invoice') {
     console.log('Not an invoice');
     return false;
   }
 
-  const stripeInvoiceStatus = input['status'];
-  const stripeInvoiceObject = input['object'];
+  const id = stripeInvoice.id;
+
+  if (!id) {
+    console.log('No object id found');
+    return false;
+  }
+
+  const stripeInvoiceStatus = stripeInvoice.status;
+
   const stripeInvoiceNote = [
     {
       id: 'hosted_invoice_url',
-      text: 'This invoice was created by Stripe [invoice](' + stripeInvoiceObject['hosted_invoice_url'] + ')',
+      text: 'This invoice was created by Stripe [invoice](' + stripeInvoice.hosted_invoice_url + ')',
     },
     {
       id: 'invoice_pdf',
-      text: 'Stripe invoice PDF [invoice](' + stripeInvoiceObject['invoice_pdf'] + ')',
+      text: 'Stripe invoice PDF [invoice](' + stripeInvoice.invoice_pdf + ')',
     },
   ];
 
@@ -35,7 +36,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Record<str
   let invoice = (await medplum.searchOne('Invoice', 'identifier=' + id)) as Invoice;
 
   if (!invoice) {
-    invoice = await medplum.createResource({
+    invoice = await medplum.createResource<Invoice>({
       resourceType: 'Invoice',
       identifier: [
         // Create Stripe Invoice Identifier
@@ -45,33 +46,26 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Record<str
         },
       ],
       status: getInvoiceStatus(stripeInvoiceStatus),
-      issued: new Date().toISOString(),
       totalGross: {
-        value: stripeInvoiceObject['amount_due'] / 100,
-        currency: stripeInvoiceObject['currency'],
+        value: stripeInvoice.amount_due / 100,
+        currency: stripeInvoice.currency.toUpperCase(),
       },
       totalNet: {
-        value: stripeInvoiceObject['amount_paid'] / 100,
-        currency: stripeInvoiceObject['currency'].toUpperCase(),
+        value: stripeInvoice.amount_paid / 100,
+        currency: stripeInvoice.currency.toUpperCase(),
       },
       note: stripeInvoiceNote,
-      lineItem: stripeInvoiceObject.lines.data.map((line: LineItem) => {
+      lineItem: stripeInvoice.lines.data.map((line): InvoiceLineItem => {
         return {
           id: line.id,
           extension: [
             {
-              url: 'https://stripe.com/line_item/url',
-              valueString: line.url,
-            },
-            {
               url: 'https://stripe.com/line_item/description',
-              valueString: line.description,
+              valueString: line.description as string,
             },
           ],
           priceComponent: [
             {
-              code: 'base',
-              factor: line.quantity,
               amount: {
                 value: line.amount / 100,
                 currency: line.currency.toUpperCase(),
@@ -82,9 +76,12 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Record<str
       }),
     });
     console.log('Created invoice');
+  } else {
+    invoice.status = getInvoiceStatus(stripeInvoiceStatus);
+    invoice = await medplum.updateResource(invoice);
   }
 
-  const accountId = stripeInvoiceObject['customer'];
+  const accountId = stripeInvoice.customer as string;
   const account = (await medplum.searchOne('Account', 'identifier=' + accountId)) as Account;
 
   //If there is an account in the system with that identifier, link the invoice to the account
@@ -103,7 +100,7 @@ enum InvoiceStatus {
   Cancelled = 'cancelled',
 }
 
-function getInvoiceStatus(input: string): InvoiceStatus {
+function getInvoiceStatus(input: Stripe.Invoice.Status | null): InvoiceStatus {
   switch (input) {
     case 'paid':
       return InvoiceStatus.Balanced;
@@ -116,16 +113,3 @@ function getInvoiceStatus(input: string): InvoiceStatus {
       return InvoiceStatus.Draft;
   }
 }
-
-type LineItem = {
-  id: string;
-  object: string;
-  amount: number;
-  amount_excluding_tax: number;
-  currency: string;
-  description: string;
-  discount_amounts: any[];
-  discountable: boolean;
-  quantity: number;
-  url: string;
-};
