@@ -55,9 +55,19 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Record<str
         currency: stripeInvoiceObject['currency'].toUpperCase(),
       },
       note: stripeInvoiceNote,
-      lineItem: stripeInvoiceObject.lines.data.map((line) => {
+      lineItem: stripeInvoiceObject.lines.data.map((line: LineItem) => {
         return {
-          sequence: line.id,
+          id: line.id,
+          extension: [
+            {
+              url: 'https://stripe.com/line_item/url',
+              valueString: line.url,
+            },
+            {
+              url: 'https://stripe.com/line_item/description',
+              valueString: line.description,
+            },
+          ],
           priceComponent: [
             {
               code: 'base',
@@ -106,3 +116,16 @@ function getInvoiceStatus(input: string): InvoiceStatus {
       return InvoiceStatus.Draft;
   }
 }
+
+type LineItem = {
+  id: string;
+  object: string;
+  amount: number;
+  amount_excluding_tax: number;
+  currency: string;
+  description: string;
+  discount_amounts: any[];
+  discountable: boolean;
+  quantity: number;
+  url: string;
+};
