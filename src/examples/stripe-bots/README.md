@@ -10,9 +10,30 @@ At a high level, the integration has the following components:
 
 ## Medplum Setup
 
-1. Create your [Medplum Access Policy](https://www.medplum.com/docs/auth/access-control#resource-type), you'll want to include only two resource types `Invoice` and `Account`.
-2. Create a [ClientApplication](https://www.medplum.com/docs/auth/client-credentials) and apply the access policy from above
-3. Create your [Bot](https://www.medplum.com/docs/bots/bot-basics) and deploy the code using the sample in this repository as a base
+Create your [Medplum Access Policy](https://www.medplum.com/docs/auth/access-control#resource-type), you'll want to include three resource types `Invoice`, `Account` and `Bot` (read-only). Example below.
+
+```json
+{
+  "resourceType": "AccessPolicy",
+  "name": "Stripe Webhook Access Policy",
+  "resource": [
+    {
+      "resourceType": "Invoice"
+    },
+    {
+      "resourceType": "Account"
+    },
+    {
+      "resourceType": "Bot",
+      "readonly": true
+    }
+  ]
+}
+```
+
+Create a [ClientApplication](https://www.medplum.com/docs/auth/client-credentials) and apply the access policy from above in the [Admin Panel](https://app.medplum.com/admin/project)
+
+Create your [Bot](https://www.medplum.com/docs/bots/bot-basics) and [deploy](https://www.medplum.com/docs/bots/bots-in-production#deploying-your-bot) the code using the sample in this repository as a base, build and deploy your bot. Apply the access policy from above in the [Admin Panel](https://app.medplum.com/admin/project).
 
 ## Stripe Setup
 

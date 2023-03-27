@@ -3,9 +3,9 @@ import { Account, Invoice, InvoiceLineItem } from '@medplum/fhirtypes';
 import type Stripe from 'stripe';
 
 export async function handler(medplum: MedplumClient, event: BotEvent<Record<string, any>>): Promise<any> {
-  const input = event.input as Stripe.Event.Data;
+  const input = event.input;
+  const stripeInvoice = input['data']['object'] as Stripe.Invoice | undefined;
 
-  const stripeInvoice = input.object as Stripe.Invoice | undefined;
   if (stripeInvoice?.object !== 'invoice') {
     console.log('Not an invoice');
     return false;
@@ -20,22 +20,12 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Record<str
 
   const stripeInvoiceStatus = stripeInvoice.status;
 
-  const stripeInvoiceNote = [
-    {
-      id: 'hosted_invoice_url',
-      text: 'This invoice was created by Stripe [invoice](' + stripeInvoice.hosted_invoice_url + ')',
-    },
-    {
-      id: 'invoice_pdf',
-      text: 'Stripe invoice PDF [invoice](' + stripeInvoice.invoice_pdf + ')',
-    },
-  ];
-
   // Attempt to find the invoice if it already exists
 
   let invoice = (await medplum.searchOne('Invoice', 'identifier=' + id)) as Invoice;
 
   if (!invoice) {
+    console.log('No invoice found, creating new invoice');
     invoice = await medplum.createResource<Invoice>({
       resourceType: 'Invoice',
       identifier: [
@@ -54,7 +44,6 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Record<str
         value: stripeInvoice.amount_paid / 100,
         currency: stripeInvoice.currency.toUpperCase(),
       },
-      note: stripeInvoiceNote,
       lineItem: stripeInvoice.lines.data.map((line): InvoiceLineItem => {
         return {
           id: line.id,
@@ -93,6 +82,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Record<str
   return true;
 }
 
+// These are the standard FHIR invoice statuses
 enum InvoiceStatus {
   Draft = 'draft',
   Balanced = 'balanced',

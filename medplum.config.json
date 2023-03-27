@@ -41,6 +41,12 @@
       "id": "",
       "source": "src/examples/finalize-report.ts",
       "dist": "dist/examples/finalize-report.js"
+    },
+    {
+      "name": "stripe-create-invoice",
+      "id": "",
+      "source": "src/examples/stripe-bots/stripe-create-invoice.ts",
+      "dist": "dist/examples/stripe-bots/stripe-create-invoice.js"
     }
   ]
 }
