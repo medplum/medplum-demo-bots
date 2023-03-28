@@ -5,7 +5,7 @@ import { handler } from './stripe-create-invoice';
 const medplum = new MockClient();
 // npm t src/examples/stripe-bots/stripe-create-invoice.test.ts
 
-test('Create PDF', async () => {
+test('Create Invoice', async () => {
   // This input is a Stripe Event object from https://stripe.com/docs/webhooks/stripe-events
   const input = {
     id: 'evt_1MqItaDlo6kh7lYQKFQhFJ2J',
@@ -177,7 +177,7 @@ test('Create PDF', async () => {
     request: 'req_ewxcD5uEcrEeuT',
     type: 'invoice.created',
   };
-  const contentType = 'json';
+  const contentType = 'application/json';
 
   const result = await handler(medplum, { input, contentType, secrets: {} });
   expect(result).toBeDefined();

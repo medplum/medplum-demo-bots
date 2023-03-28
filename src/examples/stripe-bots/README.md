@@ -10,7 +10,7 @@ At a high level, the integration has the following components:
 
 ## Medplum Setup
 
-Create your [Medplum Access Policy](https://www.medplum.com/docs/auth/access-control#resource-type), you'll want to include three resource types `Invoice`, `Account` and `Bot` (read-only). Example below.
+Create your [Medplum Access Policy](https://www.medplum.com/docs/auth/access-control#resource-type), you'll want to include three resource types `Invoice`, `Account` and `Bot` (read-only). An Access Policy is important because you want to make sure that the system sending webhooks only has the minimal set of permissions needed to function. Example below.
 
 ```json
 {
