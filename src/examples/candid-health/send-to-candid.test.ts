@@ -29,50 +29,6 @@ describe('Candid Health Tests', () => {
 
     const patient = await medplum.createResource({
       resourceType: 'Patient',
-      identifier: [
-        {
-          type: {
-            coding: [
-              {
-                system: 'http://terminology.hl7.org/CodeSystem/v2-0203',
-                code: 'MR',
-                display: 'Medical Record Number',
-              },
-            ],
-            text: 'Medical Record Number',
-          },
-          system: 'http://hospital.smarthealthit.org',
-          value: '1234567',
-        },
-        {
-          type: {
-            coding: [
-              {
-                system: 'http://terminology.hl7.org/CodeSystem/v2-0203',
-                code: 'SS',
-                display: 'Social Security Number',
-              },
-            ],
-            text: 'Social Security Number',
-          },
-          system: 'http://hl7.org/fhir/sid/us-ssn',
-          value: '999-61-9797',
-        },
-        {
-          type: {
-            coding: [
-              {
-                system: 'http://terminology.hl7.org/CodeSystem/v2-0203',
-                code: 'DL',
-                display: "Driver's License",
-              },
-            ],
-            text: "Driver's License",
-          },
-          system: 'urn:oid:2.16.840.1.113883.4.3.25',
-          value: 'S99940283',
-        },
-      ],
       name: [
         {
           family: 'Kirby901',
@@ -426,60 +382,6 @@ describe('Candid Health Tests', () => {
           valueMoney: {
             value: 2000,
             currency: 'USD',
-          },
-        },
-        {
-          type: {
-            coding: [
-              {
-                system: 'http://terminology.hl7.org/CodeSystem/coverage-copay-type',
-                code: 'gpvisit',
-              },
-            ],
-          },
-          valueMoney: {
-            extension: [
-              {
-                url: 'http://hl7.org/fhir/us/insurance-card/StructureDefinition/C4DIC-BeneficiaryCostString-extension',
-                valueString: 'N/A',
-              },
-            ],
-          },
-        },
-        {
-          type: {
-            coding: [
-              {
-                system: 'http://terminology.hl7.org/CodeSystem/coverage-copay-type',
-                code: 'spvisit',
-              },
-            ],
-          },
-          valueMoney: {
-            extension: [
-              {
-                url: 'http://hl7.org/fhir/us/insurance-card/StructureDefinition/C4DIC-BeneficiaryCostString-extension',
-                valueString: 'N/A',
-              },
-            ],
-          },
-        },
-        {
-          type: {
-            coding: [
-              {
-                system: 'http://terminology.hl7.org/CodeSystem/coverage-copay-type',
-                code: 'emergency',
-              },
-            ],
-          },
-          valueMoney: {
-            extension: [
-              {
-                url: 'http://hl7.org/fhir/us/insurance-card/StructureDefinition/C4DIC-BeneficiaryCostString-extension',
-                valueString: 'N/A',
-              },
-            ],
           },
         },
         {
