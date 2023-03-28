@@ -21,6 +21,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Encounter>
   if (!encounter.serviceProvider) {
     throw new Error('Missing Service Provider');
   }
+
   const serviceFacility: Organization = await medplum.readReference(encounter.serviceProvider);
 
   // Encounter.participant lists all the providers who were part of this encounter.
@@ -29,6 +30,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Encounter>
   if (!encounter?.participant || encounter.participant.length === 0) {
     throw new Error('Missing provider');
   }
+
   const providerRef = encounter.participant.find(
     (participant) =>
       participant?.type?.[0] &&
@@ -126,6 +128,7 @@ async function submitCandidEncounter(candidCodedEncounter: any, apiKey: string, 
     }),
     headers: { 'Content-Type': 'application/json' },
   });
+
   const bearerToken = ((await authResponse.json()) as any).access_token;
 
   // Send the CodedEncounter
