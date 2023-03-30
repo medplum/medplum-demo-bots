@@ -11,13 +11,15 @@ import {
 } from '@medplum/fhirtypes';
 import fetch from 'node-fetch';
 
+const CANDID_API_URL = 'https://api-staging.joincandidhealth.com/api/v1/';
+
 export async function handler(medplum: MedplumClient, event: BotEvent<Encounter>): Promise<any> {
   const encounter = event.input;
 
   // Read the Patient
   const patient: Patient = await medplum.readReference(encounter.subject as Reference<Patient>);
 
-  // Encounter.serviceProvider represents rhe organization that is primarily responsible for this Encounter's services
+  // Encounter.serviceProvider represents the organization that is primarily responsible for this Encounter's services
   if (!encounter.serviceProvider) {
     throw new Error('Missing Service Provider');
   }
@@ -120,7 +122,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Encounter>
  */
 async function submitCandidEncounter(candidCodedEncounter: any, apiKey: string, apiSecret: string): Promise<any> {
   // Get a Bearer Token
-  const authResponse = await fetch('https://api-staging.joincandidhealth.com/api/v1/auth/token', {
+  const authResponse = await fetch(CANDID_API_URL + 'auth/token', {
     method: 'post',
     body: JSON.stringify({
       client_id: apiKey,
@@ -132,7 +134,7 @@ async function submitCandidEncounter(candidCodedEncounter: any, apiKey: string, 
   const bearerToken = ((await authResponse.json()) as any).access_token;
 
   // Send the CodedEncounter
-  const encounterResponse = await fetch('https://api-staging.joincandidhealth.com/api/v1/coded_encounters', {
+  const encounterResponse = await fetch(CANDID_API_URL + '/coded_encounters', {
     method: 'post',
     body: JSON.stringify(candidCodedEncounter),
     headers: { 'Content-Type': 'application/json', authorization: `Bearer ${bearerToken}` },

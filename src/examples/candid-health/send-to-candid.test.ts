@@ -64,6 +64,7 @@ describe('Candid Health Tests', () => {
     });
 
     const serviceProvider = await medplum.createResource({
+      resourceType: 'Organization',
       name: 'HOLYOKE MEDICAL CENTER',
       address: [
         {
@@ -74,7 +75,6 @@ describe('Candid Health Tests', () => {
           country: 'US',
         },
       ],
-      resourceType: 'Organization',
     });
 
     const encounter = await medplum.createResource({
