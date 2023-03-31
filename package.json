@@ -17,7 +17,7 @@
     "@medplum/cli": "2.0.11",
     "@medplum/core": "2.0.11",
     "@medplum/fhirtypes": "2.0.11",
-    "@medplum/mock": "2.0.11",
+    "@medplum/mock": "2.0.12",
     "@types/node": "18.7.6",
     "@types/node-fetch": "^2.6.2",
     "@types/ssh2-sftp-client": "^7.1.0",
