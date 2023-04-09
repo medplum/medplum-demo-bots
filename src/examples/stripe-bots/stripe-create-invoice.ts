@@ -50,7 +50,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Record<str
           extension: [
             {
               url: 'https://stripe.com/line_item/description',
-              valueString: line.description as string,
+              valueString: (line.description as string) || '',
             },
           ],
           priceComponent: [
@@ -64,6 +64,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Record<str
         };
       }),
     });
+
     console.log('Created invoice');
   } else {
     invoice.status = getInvoiceStatus(stripeInvoiceStatus);
@@ -71,10 +72,25 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Record<str
   }
 
   const accountId = stripeInvoice.customer as string;
-  const account = (await medplum.searchOne('Account', 'identifier=' + accountId)) as Account;
+  let account = (await medplum.searchOne('Account', 'identifier=' + accountId)) as Account;
 
   //If there is an account in the system with that identifier, link the invoice to the account
   if (account) {
+    invoice.account = createReference(account);
+    await medplum.updateResource(invoice);
+  } else {
+    account = await medplum.createResource<Account>({
+      resourceType: 'Account',
+      identifier: [
+        {
+          system: 'https://stripe.com/account/id',
+          value: accountId,
+        },
+      ],
+      status: 'active',
+      name: stripeInvoice.customer_email || '',
+      description: stripeInvoice.customer_name || '',
+    });
     invoice.account = createReference(account);
     await medplum.updateResource(invoice);
   }
