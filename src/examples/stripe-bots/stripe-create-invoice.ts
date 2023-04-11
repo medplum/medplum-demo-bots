@@ -1,5 +1,5 @@
 import { BotEvent, createReference, MedplumClient } from '@medplum/core';
-import { Account, Invoice, InvoiceLineItem } from '@medplum/fhirtypes';
+import { Account, Invoice } from '@medplum/fhirtypes';
 import type Stripe from 'stripe';
 
 export async function handler(medplum: MedplumClient, event: BotEvent<Record<string, any>>): Promise<any> {
@@ -26,44 +26,29 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Record<str
 
   if (!invoice) {
     console.log('No invoice found, creating new invoice');
-    invoice = await medplum.createResource<Invoice>({
-      resourceType: 'Invoice',
-      identifier: [
-        // Create Stripe Invoice Identifier
-        {
-          system: 'https://stripe.com/invoice/id',
-          value: id,
+    invoice = await medplum.createResourceIfNoneExist<Invoice>(
+      {
+        resourceType: 'Invoice',
+        identifier: [
+          // Create Stripe Invoice Identifier
+          {
+            system: 'https://stripe.com/invoice/id',
+            value: id,
+          },
+        ],
+        status: getInvoiceStatus(stripeInvoiceStatus),
+        totalGross: {
+          value: stripeInvoice.amount_due / 100,
+          currency: stripeInvoice.currency.toUpperCase(),
         },
-      ],
-      status: getInvoiceStatus(stripeInvoiceStatus),
-      totalGross: {
-        value: stripeInvoice.amount_due / 100,
-        currency: stripeInvoice.currency.toUpperCase(),
+        totalNet: {
+          value: stripeInvoice.amount_paid / 100,
+          currency: stripeInvoice.currency.toUpperCase(),
+        },
       },
-      totalNet: {
-        value: stripeInvoice.amount_paid / 100,
-        currency: stripeInvoice.currency.toUpperCase(),
-      },
-      lineItem: stripeInvoice.lines.data.map((line): InvoiceLineItem => {
-        return {
-          id: line.id,
-          extension: [
-            {
-              url: 'https://stripe.com/line_item/description',
-              valueString: line.description as string,
-            },
-          ],
-          priceComponent: [
-            {
-              amount: {
-                value: line.amount / 100,
-                currency: line.currency.toUpperCase(),
-              },
-            },
-          ],
-        };
-      }),
-    });
+      'identifier=' + id
+    );
+
     console.log('Created invoice');
   } else {
     invoice.status = getInvoiceStatus(stripeInvoiceStatus);
@@ -71,10 +56,28 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Record<str
   }
 
   const accountId = stripeInvoice.customer as string;
-  const account = (await medplum.searchOne('Account', 'identifier=' + accountId)) as Account;
+  let account = (await medplum.searchOne('Account', 'identifier=' + accountId)) as Account;
 
   //If there is an account in the system with that identifier, link the invoice to the account
   if (account) {
+    invoice.account = createReference(account);
+    await medplum.updateResource(invoice);
+  } else {
+    account = await medplum.createResourceIfNoneExist<Account>(
+      {
+        resourceType: 'Account',
+        identifier: [
+          {
+            system: 'https://stripe.com/account/id',
+            value: accountId,
+          },
+        ],
+        status: 'active',
+        name: stripeInvoice.customer_email || '',
+        description: stripeInvoice.customer_name || '',
+      },
+      'identifier=' + accountId
+    );
     invoice.account = createReference(account);
     await medplum.updateResource(invoice);
   }
