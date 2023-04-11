@@ -3,5 +3,18 @@
   "extends": [
     "config:base"
   ],
-  "prHourlyLimit": 4
+  "prHourlyLimit": 4,
+  "packageRules": [
+    {
+      "matchPackagePatterns": ["^@medplum"],
+      "groupName": "medplum",
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "excludePackagePatterns": ["^@medplum"]
+      "matchUpdateTypes": ["patch", "minor"],
+      "groupName": "devDependencies (non-major)",
+      "groupSlug": "dev-dependencies"
+    }       
+  ]
 }
