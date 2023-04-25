@@ -18,7 +18,12 @@ The `send-to-candid.test.ts` is a test that repo illustrates how to construct re
 
 The `send-to-candid.ts` bot demonstrates how to construct a coded encounter to the Candid API, populated with the appropriate metadata. Constructing the coded encounter is highly business logic dependent and may need adjustment or enhancement based on the service provided.
 
+## Task Synchronizer
+
+The `sync-candid-tasks.ts` bot demonstrates how to pull tasks from Candid and synchronize them to Medplum. The Tasks API is polling based, so it is recommended that you run this [bot on cron](https://www.medplum.com/docs/bots/bot-cron-job) to synchronize the tasks at a regular interval.
+
+The example shows syncing open tasks, and syncing by status and time window is a best practice.
+
 ## Other features
 
-- Candid has a concept of tasks, or actions that need to be taken regarding, these are also useful to represent in FHIR as [Tasks](https://www.medplum.com/docs/api/fhir/resources/task).
 - Claims and payor related data are also possible to build and maintain in FHIR, and can be useful for many payor-to-payor and payor-to-provider integrations. You can see common payor FHIR implementation guide on the [Medplum Compliance](https://www.medplum.com/docs/compliance/cms-fhir) documentation.
