@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "description": "Medplum Demo Bots",
   "scripts": {
-    "build": "tsc",
+    "clean": "rimraf dist",
+    "build": "npm run clean && tsc --project tsconfig.build.json && node esbuild-script.js",
     "test": "vitest run",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
@@ -35,7 +36,10 @@
     "ssh2-sftp-client": "9.0.4",
     "stripe": "11.18.0",
     "typescript": "5.0.4",
-    "vitest": "0.30.1"
+    "vitest": "0.30.1",
+    "rimraf": "5.0.0",
+    "glob": "^10.2.2",
+    "esbuild": "^0.17.18"
   },
   "eslintConfig": {
     "root": true,
