@@ -30,7 +30,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
         resourceType: 'Encounter',
         identifier: [
           {
-            system: 'https://api-staging.joincandidhealth.com/api/v1/encounters',
+            system: 'https://joincandidhealth.com/encounter/id',
             value: candidTask.encounter_id,
           },
         ],
@@ -42,7 +42,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
         resourceType: 'Task',
         identifier: [
           {
-            system: 'https://api-staging.joincandidhealth.com/api/v1/tasks',
+            system: 'https://api-staging.joincandidhealth.com/task/id',
             value: candidTask.task_id,
           },
         ],
