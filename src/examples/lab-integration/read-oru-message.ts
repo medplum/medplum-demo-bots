@@ -28,6 +28,12 @@ import { default as SftpClient } from 'ssh2-sftp-client';
 // Timezone offset of partner lab
 const PARTNER_TIMEZONE = '-05:00';
 
+/**
+ * This Bot demonstrates how to read lab results from an SFTP server to create `Observation` and `DiagnosticReport`
+ * resources. Incoming data is the the form of HL7v2 ORU messages
+ *
+ * See: https://v2plus.hl7.org/2021Jan/message-structure/ORU_R01.html
+ */
 export async function handler(medplum: MedplumClient, event: BotEvent): Promise<any> {
   // Read SFTP connection data from project secrets (TODO link)
   const host = event.secrets['SFTP_HOST'].valueString;
