@@ -14,10 +14,10 @@
   "author": "Medplum <hello@medplum.com>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@medplum/cli": "2.0.19",
-    "@medplum/core": "2.0.19",
-    "@medplum/fhirtypes": "2.0.19",
-    "@medplum/mock": "2.0.19",
+    "@medplum/cli": "2.0.22",
+    "@medplum/core": "2.0.22",
+    "@medplum/fhirtypes": "2.0.22",
+    "@medplum/mock": "2.0.22",
     "@types/node": "18.16.2",
     "@types/node-fetch": "^2.6.2",
     "@types/ssh2-sftp-client": "^9.0.0",
@@ -74,5 +74,8 @@
   "prettier": {
     "printWidth": 120,
     "singleQuote": true
+  },
+  "dependencies": {
+    "esbuild-darwin-64": "^0.15.18"
   }
 }
