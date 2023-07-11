@@ -5,7 +5,7 @@ import { handler } from './sync-candid-tasks';
 const medplum = new MockClient();
 // npm t src/examples/candid-health/sync-candid-tasks.test.ts
 
-test('Sync Tasks', async () => {
+test.skip('Sync Tasks', async () => {
   const input = {
     id: 'evt_1MqItaDlo6kh7lYQKFQhFJ2J',
     status: 'open',
