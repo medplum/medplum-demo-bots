@@ -15,6 +15,7 @@ import {
   DiagnosticReport,
   Observation,
   OperationOutcome,
+  Organization,
   Parameters,
   Patient,
   Practitioner,
@@ -46,6 +47,7 @@ type HealthGorillaResource =
   | Account
   | DiagnosticReport
   | Observation
+  | Organization
   | Patient
   | Practitioner
   | PractitionerRole
@@ -70,8 +72,8 @@ const referenceMap = new Map<string, string>();
  *
  * The majority of this bot is dedicated to rewriting references from Health Gorilla.
  *
- * @param medplum The Medplum client.
- * @param event The Bot execution event with a Health Gorilla resource.
+ * @param medplum - The Medplum client.
+ * @param event - The Bot execution event with a Health Gorilla resource.
  * @returns Returns OK OperationOutcome on success, or an error OperationOutcome on failure.
  */
 export async function handler(
@@ -129,7 +131,7 @@ export async function handler(
 /**
  * Returns the Health Gorilla config settings from the Medplum project secrets.
  * If any required config values are missing, this method will throw and the bot will terminate.
- * @param event The bot input event.
+ * @param event - The bot input event.
  * @returns The Health Gorilla config settings.
  */
 function getHealthGorillaConfig(event: BotEvent): HealthGorillaConfig {
@@ -161,7 +163,7 @@ function requireStringSecret(secrets: Record<string, ProjectSecret>, name: strin
 
 /**
  * Connects to the Health Gorilla API and returns a FHIR client.
- * @param config The Health Gorilla config settings.
+ * @param config - The Health Gorilla config settings.
  * @returns The FHIR client.
  */
 async function connectToHealthGorilla(config: HealthGorillaConfig): Promise<MedplumClient> {
@@ -204,7 +206,7 @@ async function connectToHealthGorilla(config: HealthGorillaConfig): Promise<Medp
  *
  * We also take advantage of the "ifNoneExist" feature of FHIR to avoid creating duplicate resources.
  *
- * @param bundle The Health Gorilla bundle.
+ * @param bundle - The Health Gorilla bundle.
  */
 function touchUpBundle(bundle: Bundle<HealthGorillaResource>): void {
   for (const entry of bundle.entry ?? []) {
@@ -233,7 +235,11 @@ function touchUpBundle(bundle: Bundle<HealthGorillaResource>): void {
       request.ifNoneExist = 'identifier=' + identifier;
     }
 
-    if (resource.resourceType === 'RequestGroup' || resource.resourceType === 'DiagnosticReport') {
+    if (
+      resource.resourceType === 'DiagnosticReport' ||
+      resource.resourceType === 'RequestGroup' ||
+      resource.resourceType === 'Organization'
+    ) {
       const identifier = getIdentifier(resource, HEALTH_GORILLA_SYSTEM);
       if (identifier) {
         request.ifNoneExist = 'identifier=' + identifier;
@@ -257,8 +263,8 @@ function touchUpBundle(bundle: Bundle<HealthGorillaResource>): void {
 /**
  * Rewrites Health Gorilla references to Medplum references.
  *
- * @param medplum The Medplum client.
- * @param value An unknown value.
+ * @param medplum - The Medplum client.
+ * @param value - An unknown value.
  */
 async function rewriteReferences(medplum: MedplumClient, value: unknown): Promise<void> {
   if (!value) {
@@ -310,9 +316,9 @@ async function rewriteReferencesInObject(medplum: MedplumClient, obj: Record<str
  *
  * There are some special cases where "identifier" is not available.
  *
- * @param medplum The Medplum client.
- * @param resourceType The FHIR resource type.
- * @param id The Health Gorilla resource ID.
+ * @param medplum - The Medplum client.
+ * @param resourceType - The FHIR resource type.
+ * @param id - The Health Gorilla resource ID.
  * @returns The Medplum resource, or undefined if not found.
  */
 async function searchByHealthGorillaId(
@@ -333,8 +339,8 @@ async function searchByHealthGorillaId(
 
 /**
  * Downloads the PDF from Health Gorilla and attaches it to the Medplum resource as a Media resource.
- * @param medplum The Medplum client.
- * @param event The Bot execution event with a Health Gorilla resource.
+ * @param medplum - The Medplum client.
+ * @param event - The Bot execution event with a Health Gorilla resource.
  */
 async function attachPdf<T extends HealthGorillaResource>(medplum: MedplumClient, event: BotEvent<T>): Promise<void> {
   const resource = event.input;
