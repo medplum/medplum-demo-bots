@@ -2,14 +2,11 @@ import { Hl7Message, indexSearchParameterBundle, indexStructureDefinitionBundle 
 import { Bot, Bundle, Reference, SearchParameter } from '@medplum/fhirtypes';
 import { MockClient } from '@medplum/mock';
 import { expect, test } from 'vitest';
-import { handler } from './hl7-bot';
+import { handler } from './adt-transfer-bot';
 import { SEARCH_PARAMETER_BUNDLE_FILES, readJson } from '@medplum/definitions';
 
-//To run these tests from the command line
-//npm t src/hl7-bot.test.ts
-
-//To run a specific test
-//npm t src/hl7-bot.test.ts -t 'Update HL7 Message'
+// To run these tests from the command line
+// npm t src/adt-transfer-listener/adt-transfer-bot.test.ts
 
 describe('HL7 Bots', async () => {
   // start-block index-schema
@@ -83,5 +80,29 @@ ZVN|A05`);
     expect(patient?.address?.[0].state).toBe('London');
     expect(patient?.address?.[0].postalCode).toBe('SW1A 1AA');
     expect(patient?.address?.[0].country).toBe('GBR');
+  });
+
+  // Additional test case to confirm updated fields are stored
+  test('ADT 01 create patient and encounter', async () => {
+    const medplum = new MockClient();
+    const bot: Reference<Bot> = { reference: 'Bot/123' };
+    const input = Hl7Message.parse(`MSH|^~\\&|ADT1|HOSPITAL|LABADT|DH|202305231530|SECURITY|ADT^A01|MSG00001|P|2.3
+EVN|A01|202305231530
+PID|||123456^^^HOSPITAL^MR||DOE^JOHN^A||19610615|M||C|123 MAIN ST^^METROPOLIS^IL^60060^USA||(555)555-1212||(555)555-1234||S||123456789|987654^NC
+NK1|1|DOE^JANE|WIFE|123 MAIN ST^^METROPOLIS^IL^60060^USA||(555)555-5678
+PV1|1|I|2000^2012^01^ICU^ICU^01||||004777^DOE^JANE^|||SUR||||ADM|A0|
+PV2|^^^ICU|||||||||||||202305231530`);
+    const contentType = 'x-application/hl7-v2+er7';
+    const secrets = {};
+    const result = await handler(medplum, { bot, input, contentType, secrets });
+    expect(result.get('MSA')).toBeDefined();
+
+    const patient = await medplum.searchOne('Patient', 'identifier=123456');
+    expect(patient).toBeDefined();
+    expect(patient?.name?.[0].family).toBe('DOE');
+    expect(patient?.name?.[0].given?.[0]).toBe('JOHN');
+
+    const encounter = await medplum.searchOne('Encounter', 'subject=Patient/' + patient?.id);
+    expect(encounter).toBeDefined();
   });
 });

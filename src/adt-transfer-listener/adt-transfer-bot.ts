@@ -1,19 +1,21 @@
 import { BotEvent, Hl7Message, MedplumClient } from '@medplum/core';
-import { Patient } from '@medplum/fhirtypes';
+import { Encounter, Patient } from '@medplum/fhirtypes';
 
-export async function handler(medplum: MedplumClient, event: BotEvent): Promise<Hl7Message> {
-  const input = event.input as Hl7Message;
+export async function handler(medplum: MedplumClient, event: BotEvent<Hl7Message>): Promise<Hl7Message> {
+  const input = event.input;
+  const systemString = 'www.myhospitalsystem.org/IDs';
 
   // Log Message Type
   const messageType = input.getSegment('MSH')?.getField(9)?.getComponent(1) as string;
   const messageSubtype = input.getSegment('MSH')?.getField(9)?.getComponent(2) as string;
 
-  // If this is anything but ADT^A28, ADT^A08, ADT^A30 then exit
+  // If this is anything but ADT
   if (messageType !== 'ADT') {
     return input.buildAck();
   }
 
-  if (messageSubtype !== 'A28' && messageSubtype !== 'A08' && messageSubtype !== 'A30') {
+  // Only supported message types should be processed
+  if (messageSubtype !== 'A01' && messageSubtype !== 'A08' && messageSubtype !== 'A30') {
     return input.buildAck();
   }
 
@@ -63,7 +65,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
       ],
       identifier: [
         {
-          system: 'www.myhospitalsystem.org/IDs',
+          system: systemString,
           value: mrnNumber,
         },
       ],
@@ -79,6 +81,26 @@ export async function handler(medplum: MedplumClient, event: BotEvent): Promise<
     });
   }
 
+  //Create Encounter for Admissions
+  if (messageSubtype === 'A01') {
+    const locationString = input.getSegment('PV1')?.getField(3)?.getComponent(1) as string;
+    const location = await medplum.searchOne('Location', 'identifier=' + locationString);
+    await medplum.createResource<Encounter>({
+      resourceType: 'Encounter',
+      status: 'arrived',
+      subject: {
+        reference: 'Patient/' + patient.id,
+      },
+      class: { code: 'AMB' },
+      location: [{ location: { reference: 'Location/' + location } }],
+    });
+  } else if (messageSubtype === 'A08') {
+    let encounter = await medplum.searchOne('Encounter', 'subject=Patient/' + patient.id + '&status=arrived');
+    if (encounter) {
+      encounter.status = 'finished';
+      encounter = await medplum.updateResource<Encounter>(encounter);
+    }
+  }
   // Return Ack
   return input.buildAck();
 }
