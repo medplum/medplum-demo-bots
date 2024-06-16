@@ -29,6 +29,7 @@
     "root": true
   },
   "devDependencies": {
+    "@medplum/bot-layer": "^3.1.8",
     "@medplum/cli": "3.1.8",
     "@medplum/core": "3.1.8",
     "@medplum/eslint-config": "3.1.8",
@@ -42,6 +43,7 @@
     "esbuild": "0.21.4",
     "form-data": "4.0.0",
     "glob": "^10.4.1",
+    "jose": "^5.4.0",
     "node-fetch": "2.7.0",
     "pdfmake": "0.2.10",
     "rimraf": "5.0.7",
