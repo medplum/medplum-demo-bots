@@ -1,13 +1,13 @@
 
-> medplum-demo-bots@3.2.16 build
+> medplum-demo-bots@3.2.17 build
 > npm run clean && npm run lint && tsc && node --no-warnings esbuild-script.mjs
 
 
-> medplum-demo-bots@3.2.16 clean
+> medplum-demo-bots@3.2.17 clean
 > rimraf dist
 
 
-> medplum-demo-bots@3.2.16 lint
+> medplum-demo-bots@3.2.17 lint
 > eslint src/
 
 Build completed successfully!
