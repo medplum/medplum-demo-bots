@@ -113,6 +113,12 @@
       "id": "",
       "source": "src/metriport-bots/metriport-consolidated-data-webhook.ts",
       "dist": "dist/metriport-bots/metriport-consolidated-data-webhook.js"
+    },
+    {
+      "name": "diagnostic-report-to-risk-assessment",
+      "id": "0196d37a-d781-76bb-955d-3555c6453e5a",
+      "source": "src/arkon/emvlimatiki-project/diagnostic-report-to-risk-assessment.ts",
+      "dist": "dist/arkon/emvlimatiki-project/diagnostic-report-to-risk-assessment.ts"
     }
   ]
 }
