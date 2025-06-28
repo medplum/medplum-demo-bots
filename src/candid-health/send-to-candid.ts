@@ -1,4 +1,14 @@
-import { BotEvent, CPT, getCodeBySystem, getIdentifier, getReferenceString, ICD10, MedplumClient } from '@medplum/core';
+// Core imports from Medplum package
+import {
+  BotEvent,
+  getCodeBySystem,
+  getIdentifier,
+  getReferenceString,
+  ICD10,
+  MedplumClient,
+} from '@medplum/core';
+
+// FHIR resource types from Medplum package
 import {
   Address,
   Coverage,
@@ -9,103 +19,103 @@ import {
   Practitioner,
   Reference,
 } from '@medplum/fhirtypes';
+
+// Importing node-fetch for HTTP requests
 import fetch from 'node-fetch';
 
-const CANDID_API_URL = 'https://api-staging.joincandidhealth.com/api/v1/';
+// Candid API Base URL
+const CANDID_API_URL = 'https://api-staging.joincandidhealth.com/api/';
 
+/**
+ * Main handler function to process the Encounter event.
+ * @param medplum - Medplum client instance
+ * @param event - The bot event containing the Encounter
+ * @returns A promise resolving to the result of the processing
+ */
 export async function handler(medplum: MedplumClient, event: BotEvent<Encounter>): Promise<any> {
   const encounter = event.input;
 
-  // Read the Patient
+  // Validate and retrieve Patient from Encounter
+  if (!encounter.subject) {
+    throw new Error('Missing Patient');
+  }
   const patient: Patient = await medplum.readReference(encounter.subject as Reference<Patient>);
 
-  // Encounter.serviceProvider represents the organization that is primarily responsible for this Encounter's services
+  // Validate and retrieve the service provider Organization
   if (!encounter.serviceProvider) {
     throw new Error('Missing Service Provider');
   }
-
   const serviceFacility: Organization = await medplum.readReference(encounter.serviceProvider);
 
-  // Encounter.participant lists all the providers who were part of this encounter.
-  // Here we filter to the primary performer. See the
-  // [participant-type valueset](https://hl7.org/fhir/valueset-encounter-participant-type.html) for more options
+  // Validate and retrieve the primary provider from the Encounter participants
   if (!encounter?.participant || encounter.participant.length === 0) {
     throw new Error('Missing provider');
   }
-
   const providerRef = encounter.participant.find(
-    (participant) =>
-      participant?.type?.[0] &&
-      getCodeBySystem(participant.type[0], 'http://terminology.hl7.org/CodeSystem/v3-ParticipationType') === 'PPRF'
+      (participant) =>
+          participant?.type?.[0] &&
+          getCodeBySystem(participant.type[0], 'http://terminology.hl7.org/CodeSystem/v3-ParticipationType') === 'PPRF'
   )?.individual as Reference<Practitioner>;
   const provider: Practitioner = await medplum.readReference(providerRef);
 
-  // Read the Coverage resource, which contains insurance details for the patient
-  const coverage = await medplum.searchOne('Coverage', `subscriber=${getReferenceString(patient)}`);
+  // Validate and retrieve Coverage information for the Patient
+  const coverage = await medplum.searchOne('Coverage', `beneficiary=${getReferenceString(patient)}`);
   if (!coverage) {
     throw new Error('Missing Coverage');
   }
 
-  // Craft the Candid CodedEncounter Object
-  const { external_id: _, ...subscriber } = convertPatient(patient);
+  // Construct the Candid CodedEncounter object
+  const { external_id: individual_id, ...subscriber } = convertPatient(patient);
   const candidCodedEncounter = {
-    external_id: getReferenceString(encounter), // Use the `Encounter/<id>` as the external id
-    date_of_service: extractDate(encounter.period?.start),
-    end_date_of_service: extractDate(encounter.period?.end),
-    patient_authorized_release: true,
-    benefits_assigned_to_provider: true,
-    provider_accepts_assignment: true,
-    appointment_type: encounter.type?.[0]?.text || '',
-    do_not_bill: false,
-
-    // In this example, assume the billing and rendering providers are the same
+    // Omitting the external_id key from patient conversion
+    patient: convertPatient(patient),
     billing_provider: {
+      // Extracting first and last names, address, tax_id, and npi for billing provider
       first_name: provider.name?.[0]?.given?.[0],
       last_name: provider.name?.[0]?.family,
       address: convertAddress(provider.address?.[0]),
       tax_id: getIdentifier(provider, 'http://hl7.org/fhir/sid/us-ssn'),
       npi: getIdentifier(provider, 'http://hl7.org/fhir/sid/us-npi'),
     },
+    // Reusing billing provider details for rendering provider
     rendering_provider: {
       first_name: provider.name?.[0]?.given?.[0],
       last_name: provider.name?.[0]?.family,
       address: convertAddress(provider.address?.[0]),
       npi: getIdentifier(provider, 'http://hl7.org/fhir/sid/us-npi'),
     },
-
-    // Copy the information about the service facility
-    service_facility: {
-      organization_name: serviceFacility.name,
-      address: convertAddress(serviceFacility.address?.[0]),
-    },
-    pay_to_address: convertAddress(serviceFacility.address?.[0]),
-    patient: convertPatient(patient),
     subscriber_primary: {
       ...subscriber,
+      individual_id: individual_id,
       // '18' - 'Self' (see Candid Health API docs)
       patient_relationship_to_subscriber_code: '18',
       insurance_card: convertInsuranceCard(coverage),
     },
     diagnoses: convertDiagnoses(encounter),
-
-    // '10' - '' (see Candid Health API docs)
     place_of_service_code: '10',
-    service_lines: [
-      {
-        procedure_code: encounter.type?.[0] && getCodeBySystem(encounter.type?.[0], CPT),
-        quantity: '1',
-        units: 'MJ',
-        charge_amount_cents: 10000,
-        diagnosis_pointers: [0],
-      },
-    ],
+    external_id: getReferenceString(encounter),
+    date_of_service: extractDate(encounter.period?.start),
+    patient_authorized_release: true,
+    benefits_assigned_to_provider: true,
+    provider_accepts_assignment: true,
+    billable_status: 'BILLABLE',
+    responsible_party: 'INSURANCE_PAY',
+    // Additional optional fields for the Encounter object
+    end_date_of_service: extractDate(encounter.period?.end),
+    appointment_type: encounter.type?.[0]?.coding?.[0]?.display || null,
+    service_facility: {
+      organization_name: serviceFacility.name,
+      address: convertAddress(serviceFacility.address?.[0]),
+    },
+    pay_to_address: convertAddress(serviceFacility.address?.[0]),
     synchronicity: 'Synchronous',
   };
 
+  // Submit the encounter data to Candid and log the response
   const result = await submitCandidEncounter(
-    candidCodedEncounter,
-    event.secrets['CANDID_API_KEY'].valueString as string,
-    event.secrets['CANDID_API_SECRET'].valueString as string
+      candidCodedEncounter,
+      event.secrets['CANDID_API_KEY'].valueString as string,
+      event.secrets['CANDID_API_SECRET'].valueString as string
   );
 
   console.log('Received Response from Candid:\n', JSON.stringify(result, null, 2));
@@ -122,7 +132,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Encounter>
  */
 async function submitCandidEncounter(candidCodedEncounter: any, apiKey: string, apiSecret: string): Promise<any> {
   // Get a Bearer Token
-  const authResponse = await fetch(CANDID_API_URL + 'auth/token', {
+  const authResponse = await fetch(CANDID_API_URL + 'auth/v2/token', {
     method: 'post',
     body: JSON.stringify({
       client_id: apiKey,
@@ -134,7 +144,7 @@ async function submitCandidEncounter(candidCodedEncounter: any, apiKey: string, 
   const bearerToken = ((await authResponse.json()) as any).access_token;
 
   // Send the CodedEncounter
-  const encounterResponse = await fetch(CANDID_API_URL + '/coded_encounters', {
+  const encounterResponse = await fetch(CANDID_API_URL + 'encounters/v4', {
     method: 'post',
     body: JSON.stringify(candidCodedEncounter),
     headers: { 'Content-Type': 'application/json', authorization: `Bearer ${bearerToken}` },
@@ -169,10 +179,7 @@ function convertInsuranceCard(coverage: Coverage | undefined): object | undefine
     return undefined;
   }
   return {
-    group_number: findCoverageClass(coverage, 'group')?.value,
-    plan_name: findCoverageClass(coverage, 'group')?.name,
-    plan_type: convertCoverageType(coverage.type),
-    insurance_type: 'string',
+    insurance_card_id: '',
     member_id: coverage.identifier?.[0]?.value,
     payer_name: 'string',
     payer_id: '00019',
@@ -180,6 +187,9 @@ function convertInsuranceCard(coverage: Coverage | undefined): object | undefine
     rx_pcn: findCoverageClass(coverage, 'rxpcn')?.value,
     image_url_front: 'string',
     image_url_back: 'string',
+    group_number: findCoverageClass(coverage, 'group')?.value,
+    plan_name: findCoverageClass(coverage, 'group')?.name,
+    plan_type: convertCoverageType(coverage.type),
   };
 }
 
@@ -351,7 +361,7 @@ function extractDate(date: string | undefined): string | undefined {
 // The Coverage.class field contains a suite of underwriter specific classifiers, including: group, plan, rxbin, etc.
 function findCoverageClass(coverage: Coverage, type: string): CoverageClass | undefined {
   return coverage.class?.find(
-    (klass) =>
-      klass.type && getCodeBySystem(klass.type, 'http://terminology.hl7.org/CodeSystem/coverage-class') === type
+      (klass) =>
+          klass.type && getCodeBySystem(klass.type, 'http://terminology.hl7.org/CodeSystem/coverage-class') === type
   );
 }
