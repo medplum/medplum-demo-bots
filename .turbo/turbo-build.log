@@ -1,9 +1,9 @@
 
-> medplum-demo-bots@5.1.7 build
+> medplum-demo-bots@5.1.8 build
 > npm run clean && tsc && node --no-warnings esbuild-script.mjs
 
 
-> medplum-demo-bots@5.1.7 clean
+> medplum-demo-bots@5.1.8 clean
 > rimraf dist
 
 Build completed successfully!
